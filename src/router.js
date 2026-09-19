@@ -11,10 +11,15 @@
 
 import Navigo from "navigo";
 import { Beranda, Habit, Uang, Pengaturan, NotFound } from "./views.jsx";
+import { Auth } from "./views-auth.jsx";
+import { authGate, touchSession } from "./auth.js";
 import { getRange, setRange } from "./storage/prefs.js";
 import { subscribeRange } from "./storage/index.js";
 
 const ROUTES = {
+  // T5 — Auth/onboarding (spec 07). Guard: authGate() di setiap resolve.
+  "/auth": Auth,
+  "/auth/:step": Auth,
   "/beranda": Beranda,
   "/habit": Habit,
   "/habit/:id": Habit,
@@ -184,13 +189,51 @@ function handleDeepLink(url) {
   return false;
 }
 
+function redirectReplace(hash) {
+  // Ganti entri history (tanpa loop back) → hashchange → Navigo resolve ulang
+  try {
+    location.replace(`${location.pathname}${location.search}${hash}`);
+  } catch {
+    location.hash = hash;
+  }
+}
+
+function teardownViews(root) {
+  // Beri kesempatan view melepas listener (keyboard/visualViewport/scroll)
+  root.querySelectorAll(".auth-page, .page").forEach((p) => {
+    try {
+      p.dispatchEvent(new CustomEvent("hw:destroy"));
+      if (typeof p._cleanup === "function") p._cleanup();
+    } catch {}
+  });
+  root.querySelectorAll(".appbar").forEach((h) => {
+    try {
+      if (typeof h._cleanup === "function") h._cleanup();
+    } catch {}
+  });
+  root.innerHTML = "";
+}
+
 export function initRouter(root) {
   const router = new Navigo("/", { hash: true });
 
   // Register routes
   Object.entries(ROUTES).forEach(([path, View]) => {
     router.on(path, (match) => {
-      root.innerHTML = "";
+      // T5 guard: belum login → #/auth; onboarding belum selesai → langkah berikutnya; selesai → blok rute auth
+      const { path: currentPath } = parseHash();
+      let gate = null;
+      try {
+        gate = authGate(currentPath);
+      } catch {}
+      if (gate && gate !== location.hash) {
+        redirectReplace(gate);
+        return;
+      }
+      try {
+        touchSession();
+      } catch {}
+      teardownViews(root);
       // Restore range from URL before rendering
       applyRangeFromURL();
       // Pass params to view
@@ -201,7 +244,16 @@ export function initRouter(root) {
   });
 
   router.notFound(() => {
-    root.innerHTML = "";
+    const { path: currentPath } = parseHash();
+    let gate = null;
+    try {
+      gate = authGate(currentPath);
+    } catch {}
+    if (gate && gate !== location.hash) {
+      redirectReplace(gate);
+      return;
+    }
+    teardownViews(root);
     NotFound(root);
   });
 
@@ -276,6 +328,7 @@ export function initRouter(root) {
     navigateWithRange,
     matchRoute,
     handleDeepLink,
+    authGate,
     urlPatternSupported,
   };
 

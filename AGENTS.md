@@ -7,6 +7,7 @@ CSR One UI untuk PHP 40-shared. Manual-first. Tanpa money movement. Indonesia co
 ```
 Build: npm run build      # vite build -> dist/ -> FTP public_html/
 Dev: npm run dev
+Test: npm test            # vitest run (happy-dom + fake-indexeddb; fetch di-stub gagal = tanpa backend)
 PHP smoke: php -S localhost:8000 -t public_html
 Unzip ref: zip sudah dipindah user ke luar repo — perbarui path bila perlu; hasil unzip = suplemen (lihat Structure)
 CodeGraph: codegraph sync (re-index; .codegraph/ di-ignore, regenerable)
@@ -24,6 +25,8 @@ specs/18-api-design.md → kontrak /api/v1/*, session-cookie, idempotency
 specs/19-search.md → search global 4 scope, history lokal max-5, index offline
 assets/css/           → tokens.css, motion.css
 assets/js/            → router/habit/money/settings/range/charts (CSR, transform/opacity only)
+src/auth.js + src/views-auth.jsx → T5 sesi lokal-first + onboarding state machine + authGate (spec 07)
+tests/ + docs/qa/     → T13 vitest + QA matrix/traceability/Go-No-Go (status jujur PASS/NOT TESTED/BLOCKED)
 public_html/api/v1/*.php → thin JSON, PDO prepared, redacted logs
 reference/oneui/ → suplemen, jangan edit; kanonis tetap DESIGN.md lokal
 ```

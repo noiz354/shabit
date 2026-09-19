@@ -25,6 +25,8 @@ import { printReport } from "./print.js";
 import { getPerfMetrics, checkBudgets } from "./perf.js";
 import { getAdaptiveTier } from "./net.js";
 import { api } from "./api.js";
+import { getSession, maskEmail, logout, hasPasskeyReminder, dismissPasskeyReminder, getConsentHistory, revokeConsent, getPasskeyState } from "./auth.js";
+import { getPasskeyCapability, PASSKEY_REASON_COPY } from "./webauthn.js";
 
 const TABS = [
   ["#/beranda", "Beranda"],
@@ -341,9 +343,22 @@ function showAddTransactionSheet(onCreated) {
 }
 
 // Views
-export function Beranda(root) {
+export function Beranda(root, ctx = {}) {
   shell(root, "HabitWealth", async (container) => {
     const range = getRange();
+
+    // T5 handoff: first-use vs returning dibedakan (spec 02 Gate B)
+    if (ctx.query && ctx.query.first === "1") {
+      const first = document.createElement("div");
+      first.className = "notice";
+      first.dataset.tone = "success";
+      first.setAttribute("role", "status");
+      first.style.marginBottom = "16px";
+      first.innerHTML = `<span class="notice-icon" aria-hidden="true">🎉</span><div class="notice-body"><div class="notice-title">Habit pertamamu tercatat</div><div>Ini Beranda sederhanamu. Besok cukup buka tab Habit dan centang lagi. Uang bisa dicatat kapan saja di tab Uang.</div></div>`;
+      container.appendChild(first);
+      try { history.replaceState(null, "", "#/beranda"); } catch {}
+    }
+
     const info = document.createElement("p");
     info.className = "placeholder";
     info.style.marginBottom = "16px";
@@ -696,7 +711,27 @@ export function Pengaturan(root) {
   shell(root, "Pengaturan", async (container) => {
     const settings = await getSettings().catch(() => ({}));
 
+    const session = getSession();
+    const passkeyReminder = hasPasskeyReminder();
+    const passkeyState = getPasskeyState();
+    const consentHist = getConsentHistory();
+    const lastConsent = consentHist[0] || null;
+
     const sections = [
+      { title: "Akun", items: [
+        { label: session ? `Masuk sebagai ${maskEmail(session.email)}${session.offline_created ? " • dibuat offline" : ""}` : "Belum masuk", action: () => {} },
+        { label: `Passkey: ${passkeyState.status === "enrolled" ? "aktif" : passkeyState.status === "deferred" ? "belum diatur (Nanti Saja)" : "belum diatur"}`, badge: passkeyReminder, action: async () => {
+          const cap = await getPasskeyCapability();
+          const msg = cap.canEnroll ? "Passkey siap diaktifkan." : (cap.offerPasskey ? PASSKEY_REASON_COPY.RP_NOT_CONFIGURED : PASSKEY_REASON_COPY[cap.supported ? (cap.secureContext ? "NO_PLATFORM_AUTHENTICATOR" : "INSECURE_CONTEXT") : "UNSUPPORTED"]);
+          alert(msg);
+          if (passkeyReminder) { dismissPasskeyReminder(); location.reload(); }
+        }},
+        { label: "Keluar", action: async () => {
+          if (!confirm("Keluar dari akun ini? Data habit/uang tetap tersimpan di perangkat.")) return;
+          await logout();
+          location.hash = "#/auth";
+        }},
+      ]},
       { title: "Tampilan", items: [
         { label: `Tema: ${settings.theme || "system"}`, action: async () => {
           const sel = document.createElement("div");
@@ -712,6 +747,30 @@ export function Pengaturan(root) {
         { label: `Sound: ${settings.feedback?.sound ? "ON" : "OFF"} (default OFF)`, action: async () => { await updateSetting("feedback.sound", !settings.feedback?.sound); alert("Sound toggled"); }},
       ]},
       { title: "Data & Privasi", items: [
+        { label: lastConsent ? `Persetujuan v${lastConsent.version}: dasar ✓ • kesehatan ${lastConsent.kesehatan ? "✓" : "–"} • finansial ${lastConsent.finansial ? "✓" : "–"} (${consentHist.length} riwayat)` : "Persetujuan: belum tercatat", action: () => {
+          const list = document.createElement("div");
+          list.style.marginTop = "8px";
+          if (!consentHist.length) { list.innerHTML = `<p class="placeholder">Belum ada riwayat persetujuan.</p>`; }
+          consentHist.slice(0, 10).forEach((c) => {
+            const div = document.createElement("div");
+            div.className = "notice";
+            div.style.marginBottom = "8px";
+            const when = new Date(c.granted_at).toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+            div.innerHTML = `<span class="notice-icon" aria-hidden="true">${c.revoked ? "↩️" : "📝"}</span><div class="notice-body"><div class="notice-title">${c.revoked ? `Cabut ${c.revoked}` : `Persetujuan v${c.version}`}</div><div>${when} • dasar ${c.dasar ? "✓" : "–"} • kesehatan ${c.kesehatan ? "✓" : "–"} • finansial ${c.finansial ? "✓" : "–"}</div></div>`;
+            list.appendChild(div);
+          });
+          const actions = document.createElement("div");
+          actions.style.display = "flex"; actions.style.gap = "8px"; actions.style.flexWrap = "wrap"; actions.style.marginTop = "8px";
+          ["kesehatan", "finansial"].forEach((scope) => {
+            if (!lastConsent || !lastConsent[scope]) return;
+            const b = document.createElement("button");
+            b.className = "btn btn-secondary btn-small"; b.type = "button"; b.textContent = `Cabut ${scope}`;
+            b.addEventListener("click", async () => { if (!confirm(`Cabut persetujuan ${scope}? Sinkron terkait berhenti; data manual tidak dihapus.`)) return; await revokeConsent(scope); location.reload(); });
+            actions.appendChild(b);
+          });
+          list.appendChild(actions);
+          container.appendChild(list);
+        }},
         { label: "Export Data (butuh re-auth)", action: async () => {
           try { const res = await requestExport("all"); alert(`Export ${res.id} status ${res.status}`); }
           catch(e){ if(String(e).includes("RE_AUTH")){ if(await requestReAuth()){ const res=await requestExport("all"); alert(`Export ${res.id}`);} } else alert(e); }
@@ -771,7 +830,7 @@ export function Pengaturan(root) {
         row.style.display = "flex";
         row.style.justifyContent = "space-between";
         row.style.alignItems = "center";
-        row.innerHTML = `<span style="font-size:14px">${it.label}</span><span style="font-size:12px;color:#999">›</span>`;
+        row.innerHTML = `<span style="font-size:14px">${it.label}${it.badge ? '<span class="badge-dot" role="img" aria-label="Pengingat"></span>' : ""}</span><span style="font-size:12px;color:var(--on-background-tertiary)" aria-hidden="true">›</span>`;
         row.style.cursor = "pointer";
         row.addEventListener("click", it.action);
         container.appendChild(row);
