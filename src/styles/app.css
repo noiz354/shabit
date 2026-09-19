@@ -1,32 +1,317 @@
-/* Scaffold shell: Two-Zone One UI (viewing atas, interaction bawah) + bottom tabs. */
+/* HabitWealth One UI — Wave 1: shell + motion + PWA + theme + keyboard */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+html {
+  /* Prevent CLS from font swap — fonts-ready class added after document.fonts.ready */
+  font-display: swap;
+}
+html:not(.fonts-ready) {
+  /* Hide text slightly? Better to use fallback, not hide — so we just keep system font */
+}
+
 body {
-  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: -apple-system, "Segoe UI", Roboto, "SamsungOne", sans-serif;
   background: var(--background);
   color: var(--on-background);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: contain; /* prevent pull-to-refresh conflict with custom handler */
 }
 
-.page { max-width: 640px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; }
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
 
-.viewing-area { padding: 48px var(--space-24) 16px; text-align: center; }
-.viewing-area h1 { font-size: 28px; font-weight: 700; line-height: 1.2; }
+/* Viewing area — app bar expandable (T4) */
+.viewing-area,
+.appbar {
+  padding: 48px var(--space-24) 16px;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--background);
+  transition: height var(--motion-normal, 250ms) var(--easing-standard, cubic-bezier(0.2,0,0,1));
+  will-change: height;
+  /* single progress source --appbar-p 0..1 */
+  --appbar-p: 0;
+}
+.viewing-area h1,
+.appbar-title {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  transform-origin: center bottom;
+  will-change: transform, opacity;
+}
+.appbar[data-state="dragging"] {
+  transition: none;
+}
+.appbar[data-state="collapsed"] {
+  padding: 12px var(--space-24);
+  text-align: left;
+  height: 56px !important;
+}
+.appbar[data-state="collapsed"] .appbar-title {
+  font-size: 18px;
+  font-weight: 500;
+  text-align: left;
+}
 
-.interaction-area { flex: 1; padding: 16px var(--space-24) 96px; }
-.placeholder { color: var(--on-background-secondary); font-size: 14px; }
+/* Interaction area */
+.interaction-area {
+  flex: 1;
+  padding: 16px var(--space-24) 96px;
+}
+.placeholder {
+  color: var(--on-background-secondary);
+  font-size: 14px;
+}
 
+/* Bottom tabs (max 5, no swipe) */
 .bottom-tabs {
-  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-  width: 100%; max-width: 640px; height: 56px;
-  display: flex; background: var(--surface); border-top: 1px solid var(--divider);
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 640px;
+  height: 56px;
+  display: flex;
+  background: var(--surface);
+  border-top: 1px solid var(--divider);
+  z-index: 20;
 }
 .bottom-tabs a {
-  flex: 1; display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 500; text-decoration: none;
-  color: var(--on-background-secondary); min-height: 48px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--on-background-secondary);
+  min-height: 48px;
+  position: relative;
 }
-.bottom-tabs a[aria-current="page"] { color: var(--primary); }
+.bottom-tabs a[aria-current="page"] {
+  color: var(--primary);
+}
+.bottom-tabs a[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 25%;
+  right: 25%;
+  height: 3px;
+  background: var(--primary);
+  border-radius: 0 0 3px 3px;
+}
 
+/* Skeleton-first loading (T3) */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-variant);
+  border-radius: var(--radius-card);
+  min-height: 56px;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.7), transparent);
+  animation: shimmer 1.2s infinite;
+}
+@keyframes shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+@media (prefers-color-scheme: dark) {
+  .skeleton { background: #2A2A2A; }
+  .skeleton::after { background: linear-gradient(90deg, transparent, rgba(255,255,255,.1), transparent); }
+}
+.skeleton-card { height: 88px; margin-bottom: 12px; }
+.skeleton-list { height: 56px; margin-bottom: 8px; border-radius: 12px; }
+.skeleton-title { height: 28px; width: 60%; margin: 0 auto 16px; }
+.skeleton-text { height: 14px; width: 100%; margin-bottom: 8px; }
+.skeleton-text.short { width: 60%; }
+
+/* Offline banner (AUD-PWA-01) */
+.offline-banner {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 640px;
+  background: #323232;
+  color: #fff;
+  font-size: 13px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 100;
+  animation: slide-down var(--motion-normal, 250ms) var(--easing-enter, cubic-bezier(0,0,0,1)) both;
+}
+@keyframes slide-down { from { transform: translate(-50%, -100%); } to { transform: translate(-50%, 0); } }
+.offline-icon { font-size: 14px; }
+
+/* PWA install sheet (AUD-PWA-01, One UI bottom sheet) */
+.pwa-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 640px;
+  background: var(--surface-elevated);
+  border-radius: var(--radius-dialog) var(--radius-dialog) 0 0;
+  z-index: 90;
+  padding: 0 0 24px;
+  box-shadow: 0 -2px 16px rgba(0,0,0,.12);
+}
+.pwa-sheet .sheet-content {
+  padding: 16px 24px 0;
+}
+.pwa-sheet .sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--divider);
+  border-radius: 2px;
+  margin: 12px auto;
+}
+.pwa-sheet .sheet-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.pwa-sheet .sheet-desc {
+  font-size: 14px;
+  color: var(--on-background-secondary);
+  line-height: 1.45;
+  margin-bottom: 20px;
+}
+.pwa-sheet .sheet-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+.btn {
+  height: 48px;
+  padding: 0 20px;
+  border-radius: var(--radius-btn);
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 96px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 100ms, opacity 100ms;
+}
+.btn:active { transform: scale(0.98); }
+.btn-primary { background: var(--primary-dark); color: var(--on-primary); }
+.btn-secondary { background: var(--surface-variant); color: var(--on-surface); }
+.btn-flat { background: transparent; color: var(--primary); }
+.btn-small { height: 36px; padding: 0 16px; font-size: 13px; min-width: auto; }
+
+/* Scrim */
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: var(--scrim);
+  z-index: 80;
+  animation: fade-in var(--motion-fast, 150ms) var(--easing-standard) both;
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* Update prompt */
+.update-prompt {
+  position: fixed;
+  bottom: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 608px;
+  background: #323232;
+  color: #fff;
+  border-radius: var(--radius-pill);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  z-index: 70;
+  box-shadow: 0 2px 12px rgba(0,0,0,.2);
+}
+.update-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  font-size: 13px;
+}
+.update-content span { flex: 1; }
+
+/* CTA keyboard-aware (AUD-KBD-01) */
+.cta-sticky {
+  position: sticky;
+  bottom: 72px;
+  background: var(--background);
+  padding: 12px 0;
+  z-index: 15;
+  transition: transform var(--motion-fast) var(--easing-standard);
+  will-change: transform;
+}
+.cta-sticky .btn { width: 100%; }
+
+/* Focus visible */
 :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: var(--motion-fast, 150ms) !important;
+    transition-duration: var(--motion-fast, 150ms) !important;
+  }
+  .skeleton::after { animation: none; }
+  .pwa-sheet, .offline-banner { animation-name: fade-in; }
+}
+
+/* High contrast */
+[data-high-contrast="true"] {
+  --divider: #000;
+}
+[data-high-contrast="true"] .bottom-tabs {
+  border-top-width: 2px;
+}
+
+/* Zoom 200% support (spec 03) */
+@media (max-width: 640px) {
+  .page { min-width: 320px; }
+  .interaction-area { padding-bottom: 120px; }
+}
+
+/* HabitToday skeleton specifics (T3) */
+.habit-list { display: flex; flex-direction: column; gap: 12px; }
+.habit-card {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.habit-card .check {
+  width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--divider);
+  flex-shrink: 0;
+}
+.habit-card .info { flex: 1; }
+.habit-card .title { font-size: 16px; font-weight: 500; }
+.habit-card .subtitle { font-size: 12px; color: var(--on-background-secondary); }

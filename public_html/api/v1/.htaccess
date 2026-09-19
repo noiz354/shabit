@@ -1,8 +1,13 @@
 # HabitWealth API v1 — Apache. Shared-hosting safe (tanpa modul non-standar).
+# AUD-CRYPTO-01: CSP/PP headers + report endpoint + UTF-8 utils
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /api/v1/
-  # File nyata (index.php) lewat langsung; sisanya ke front controller.
+  # Explicit routes for reports/analytics (without .php extension)
+  RewriteRule ^reports$ reports.php [L]
+  RewriteRule ^analytics$ analytics.php [L]
+  # File nyata (index.php, reports.php, analytics.php) lewat langsung; sisanya ke front controller.
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^(.*)$ index.php?_route=$1 [QSA,L]
@@ -14,7 +19,20 @@
 </FilesMatch>
 
 # API tidak di-cache; SW juga diinstruksikan NetworkOnly (specs/15).
-<FilesMatch "index\.php$">
+<FilesMatch "^(index|reports)\.php$">
   Header set Cache-Control "no-store"
   Header set Service-Worker-Allowed "/"
+  Header set Content-Type "application/json; charset=utf-8"
+  # Security headers for API
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "DENY"
+  Header set Referrer-Policy "no-referrer"
+  Header set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  # CSP for API responses (no need for script-src, but report-uri)
+  Header set Content-Security-Policy "default-src 'none'; frame-ancestors 'none'; report-uri /api/v1/reports"
+</FilesMatch>
+
+# Deny access to .env or config outside docroot (defense in depth)
+<FilesMatch "\.(env|ini|log)$">
+  Require all denied
 </FilesMatch>

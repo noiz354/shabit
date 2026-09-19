@@ -1,4 +1,6 @@
-# HabitWealth public_html — SPA fallback + SW/manifest headers.
+# HabitWealth public_html — SPA fallback + SW/manifest headers + security (AUD-CRYPTO-01)
+# APIs: 113,117,118,119,120,187
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   # API lewat aturan sendiri.
@@ -10,9 +12,31 @@
   RewriteRule ^ index.html [L]
 </IfModule>
 
+# Security headers (AUD-CRYPTO-01)
+<IfModule mod_headers.c>
+  # Content Security Policy — strict, no inline, self + data + blob for images, echarts CDN hash if remote (currently self only)
+  Header set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; report-uri /api/v1/reports; report-to csp-endpoint"
+  Header set Reporting-Endpoints "csp-endpoint=\"/api/v1/reports\""
+  # Permissions-Policy (formerly Feature-Policy) — lock camera/mic/geolocation to self/none (AUD-CRYPTO-01, API 117)
+  Header set Permissions-Policy "camera=(self), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"
+  # Other hardening
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header set Cross-Origin-Opener-Policy "same-origin"
+  Header set Cross-Origin-Embedder-Policy "credentialless"
+  # Remove server signature
+  Header unset X-Powered-By
+</IfModule>
+
 <FilesMatch "^(sw\.js|manifest\.webmanifest)$">
   Header set Cache-Control "no-cache"
 </FilesMatch>
 <FilesMatch "\.(js|css|png|svg|woff2?)$">
   Header set Cache-Control "public, max-age=31536000, immutable"
+</FilesMatch>
+
+# Block hidden files
+<FilesMatch "^\.">
+  Require all denied
 </FilesMatch>
