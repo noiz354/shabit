@@ -11,10 +11,12 @@ import { getDB } from "./storage/db.js";
 import { initTheme, syncAppearanceFromPrefs } from "./theme.js";
 import { initSync } from "./sync.js";
 import { initPWAInstall, initOfflineBanner, initSWUpdatePrompt } from "./pwa.js";
+import { initPerfObserver, initPerfBeacon, mark } from "./perf.js";
+import { setupCancelOnNavigate } from "./speech.js";
 
 // Wave 0 — Foundation (AUD-STORE-01, AUD-ROUTER-01, AUD-CRYPTO-01, AUD-PERM-01, AUD-ANAL-01)
 // Wave 1 — Shell, motion, PWA (AUD-PWA-01, MOTION-01, GEST-01, KBD-01, THEME-01, SYNC-01) + T3/T4/T15
-// Init storage + analytics + permissions + theme + sync + PWA + router
+// Wave 2 — Features (AUD-API-01/WORK-01/HAPT-01/SND-01/SPCH-01/NOTIF-01/SEARCH-01/ORIENT-01/SHARE-01/PERF-01/NET-01/PRINT-01/CAP-01/IMPORT-01) + T6–T19
 
 async function bootstrap() {
   const root = document.getElementById("app");
@@ -23,6 +25,7 @@ async function bootstrap() {
     return;
   }
 
+  mark("bootstrap-start");
   render(null, root);
 
   // 1. Storage (IDB versioned + persist post-onboarding)
@@ -47,14 +50,25 @@ async function bootstrap() {
     console.warn("[main] sync init failed", e);
   }
 
-  // 4. Analytics (redacted queue + Beacon/pagehide)
+  // 4. Perf — LCP/CLS/INP/longtask (AUD-PERF-01)
+  try {
+    initPerfObserver({
+      onLCP: (entry) => console.debug("[perf] LCP", entry.startTime),
+      onCLS: (entry) => console.debug("[perf] CLS", entry.value),
+    });
+    initPerfBeacon();
+  } catch (e) {
+    console.warn("[main] perf init failed", e);
+  }
+
+  // 5. Analytics (redacted queue + Beacon/pagehide)
   try {
     initAnalytics({ optIn: false });
   } catch (e) {
     console.warn("[main] analytics init failed", e);
   }
 
-  // 5. Permissions pre-check (no system dialog)
+  // 6. Permissions pre-check (no system dialog)
   try {
     const perms = await queryPermissions();
     window.__HW_PERMS__ = perms;
@@ -62,7 +76,7 @@ async function bootstrap() {
     console.warn("[main] permissions query failed", e);
   }
 
-  // 6. PWA — install prompt + offline banner + SW update (AUD-PWA-01 + T15)
+  // 7. PWA — install prompt + offline banner + SW update (AUD-PWA-01 + T15)
   try {
     initPWAInstall();
     initOfflineBanner();
@@ -71,7 +85,12 @@ async function bootstrap() {
     console.warn("[main] PWA init failed", e);
   }
 
-  // 7. Capabilities detect
+  // 8. Speech — cancel on navigate (AUD-SPCH-01)
+  try {
+    setupCancelOnNavigate();
+  } catch {}
+
+  // 9. Capabilities detect
   try {
     if (window.HWCapabilities && window.HWCapabilities.detect) {
       const caps = await window.HWCapabilities.detect();
@@ -79,7 +98,7 @@ async function bootstrap() {
     }
   } catch {}
 
-  // 8. Router (hash + param restore + URLPattern + back restores range/search)
+  // 10. Router (hash + param restore + URLPattern + back restores range/search)
   try {
     initRouter(root);
   } catch (e) {
@@ -87,10 +106,13 @@ async function bootstrap() {
     root.innerHTML = "<div class='page'><header class='viewing-area'><h1>HabitWealth</h1></header><div class='interaction-area'><p class='placeholder'>Gagal memuat router.</p></div></div>";
   }
 
-  // 9. Expose for CDP verification (audit)
+  mark("bootstrap-end");
+
+  // 11. Expose for CDP verification (audit)
   try {
     window.HWStorage = { getDB, store };
     window.HWTheme = { initTheme };
+    window.HWPerf = { getMetrics: () => import("./perf.js").then((m) => m.getPerfMetrics()) };
   } catch {}
 }
 
