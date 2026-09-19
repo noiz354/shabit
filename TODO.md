@@ -33,7 +33,13 @@
 
 ## Audit — 200 Mobile Web APIs (done 19 Sep 2026, docs in English)
 - [x] T-AUD: 01-discovery + 02-inventory + 03-matrix (200/200 IDs) + 04-e2e map + 05-roadmap + 06-report + `assets/js/capabilities.js` (CDP smoke PASS) — files: `docs/mobile-api-audit/`
-- [ ] T-AUD-W0: Wave 0 tasks (AUD-STORE/ROUTER/CRYPTO/PERM/ANAL) with T2–T5
+- [x] T-AUD-W0 (done 20 Sep 2026): Wave 0 tasks (AUD-STORE/ROUTER/CRYPTO/PERM/ANAL) — 5 modul fondasi:
+  - AUD-STORE-01: `src/storage/{db,prefs,outbox,opfs,index}.js` (IDB v1→v2 migration, kv/outbox/habits/entries/tx/budgets/search_index + v2 savings_goals/export_meta/opfs_fallback/analytics_queue, quota-full cleanup search_index→export_meta, persist() post-onboarding, v-guard)
+  - AUD-ROUTER-01: `src/router.js` enhanced (hash + param restore from/to/preset/q, URLPattern 197 with regex fallback, deep-link habitwealth:// mapping, back restores range/search, BroadcastChannel range sync, buildHash/parseHash/matchRoute)
+  - AUD-CRYPTO-01: `src/crypto.js` (randomId, idempotencyKey, SHA-256 subtle + fallback, utf8Encode/Decode, base64url, VAPID check, redactForLog) + `.htaccess` CSP strict + Permissions-Policy camera=(self) + `api/v1/reports.php` redacted + `analytics.php` allowlist + Reporting-Endpoints
+  - AUD-PERM-01: `src/permissions.js` (Permissions API query, primer decisions LS+IDB, shouldShowPrimer, canTriggerSystemDialog — Later never triggers system dialog, requestNotification/Camera gated)
+  - AUD-ANAL-01: `src/analytics.js` (allowlist 27 events from spec 05/17/19, redacted props no q/raw amount, hashId for ids, IDB queue max 100, Beacon/pagehide + visibilitychange flush, periodic 30s)
+  - Build: 48.61KB / gzip 17.52KB (budget 200KB aman); `node --check` OK; assets/js/storage/* re-export for audit path expectation
 - [ ] T-AUD-W1: Wave 1 tasks (PWA/MOTION/GEST/KBD/THEME/SYNC) with T3–T4/T15
 - [ ] T-AUD-W2: Wave 2 tasks (API/WORK/HAPT/NOTIF/SEARCH/CHARTS/CAP/...) with T6–T19 — CAP/IMPORT/PRINT need spec amendments first
 - [ ] T-AUD-W3: Wave 3 gated (WEBAUTHN/PUSH/RES spikes) post-ADR / R1.1
