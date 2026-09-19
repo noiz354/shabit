@@ -1,0 +1,20 @@
+# HabitWealth API v1 — Apache. Shared-hosting safe (tanpa modul non-standar).
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /api/v1/
+  # File nyata (index.php) lewat langsung; sisanya ke front controller.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)$ index.php?_route=$1 [QSA,L]
+</IfModule>
+
+# Blokir akses langsung ke lib internal.
+<FilesMatch "^(db|validate|response)\.php$">
+  Require all denied
+</FilesMatch>
+
+# API tidak di-cache; SW juga diinstruksikan NetworkOnly (specs/15).
+<FilesMatch "index\.php$">
+  Header set Cache-Control "no-store"
+  Header set Service-Worker-Allowed "/"
+</FilesMatch>

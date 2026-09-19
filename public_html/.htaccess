@@ -1,0 +1,18 @@
+# HabitWealth public_html — SPA fallback + SW/manifest headers.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # API lewat aturan sendiri.
+  RewriteCond %{REQUEST_URI} ^/api/ [OR]
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+  # Fallback CSR.
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+<FilesMatch "^(sw\.js|manifest\.webmanifest)$">
+  Header set Cache-Control "no-cache"
+</FilesMatch>
+<FilesMatch "\.(js|css|png|svg|woff2?)$">
+  Header set Cache-Control "public, max-age=31536000, immutable"
+</FilesMatch>

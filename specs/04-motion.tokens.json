@@ -1,0 +1,38 @@
+{
+  "_note": "TEAM-DEFINED baseline from specs/04-motion-behavior.md section 9. NOT official Samsung One UI values. Must be validated on real device.",
+  "_source": "One UI 2019 PDF = behavior reference only; no numeric timing/easing/velocity/spring in source",
+  "duration": {
+    "instant": 100,
+    "fast": 150,
+    "normal": 250,
+    "emphasized": 350,
+    "largeTransition": 450
+  },
+  "easing": {
+    "standard": "cubic-bezier(0.2, 0, 0, 1)",
+    "enter": "cubic-bezier(0, 0, 0, 1)",
+    "exit": "cubic-bezier(0.3, 0, 1, 1)"
+  },
+  "spring": {
+    "responsive": { "stiffness": 500, "damping": 38, "mass": 1 },
+    "returnToOrigin": { "stiffness": 420, "damping": 34, "mass": 1 }
+  },
+  "thresholds_TBD": {
+    "_note": "OPEN — spec defines contract (shouldCommit = progress>=pT || velocity>=vT) but gives no numbers. Propose + test, do not present as Samsung spec.",
+    "progressThreshold": null,
+    "velocityThreshold": null,
+    "dismissDistance": null,
+    "VELOCITY_THRESHOLD_appbar": null
+  },
+  "feedback": {
+    "selection": { "haptic": "light", "sound": null },
+    "action_confirmed": { "haptic": "medium", "sound": null },
+    "task_succeeded": { "haptic": "success", "sound": "optional" },
+    "task_failed": { "haptic": "error", "sound": null },
+    "warning": { "haptic": "warning", "sound": null }
+  },
+  "reducedMotion": {
+    "strategy": "fade fast, no parallax/zoom/long-travel, keep state feedback",
+    "duration": 150
+  }
+}

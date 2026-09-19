@@ -1,0 +1,17 @@
+# Deps / build
+node_modules/
+dist/
+.DS_Store
+Thumbs.db
+
+# Unzipped reference is derivable from the zip — keep out of git by default
+# Uncomment to track it: !reference/
+reference/
+
+# CodeGraph index is regenerable — re-index via `codegraph sync`
+.codegraph/
+
+# OS / editor
+.vscode/*
+!.vscode/settings.json
+*.log

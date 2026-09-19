@@ -1,0 +1,57 @@
+/* HabitWealth One UI motion — CSR-safe, no deps.
+   TEAM-DEFINED tokens (NOT official Samsung values). See specs/04-motion-behavior.md.
+   Only transform/opacity/clip-path are animated. */
+:root {
+  --motion-instant: 100ms;
+  --motion-fast: 150ms;
+  --motion-normal: 250ms;
+  --motion-emphasized: 350ms;
+  --motion-large: 450ms;
+  --easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --easing-enter: cubic-bezier(0, 0, 0, 1);
+  --easing-exit: cubic-bezier(0.3, 0, 1, 1);
+  --scrim-light: rgba(0, 0, 0, 0.32);
+}
+
+/* Navigation relations: deeper=up, back=down, peer=horizontal. Never global fade. */
+.nav-deeper-enter { animation: nav-up-in var(--motion-emphasized) var(--easing-enter) both; }
+.nav-back-exit { animation: nav-down-out var(--motion-normal) var(--easing-exit) both; }
+.nav-peer-enter { animation: nav-h-in var(--motion-normal) var(--easing-standard) both; }
+@keyframes nav-up-in { from { transform: translateY(48px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes nav-down-out { from { transform: none; opacity: 1; } to { transform: translateY(48px); opacity: 0; } }
+@keyframes nav-h-in { from { transform: translateX(32px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Bottom sheet/dialog from bottom (one-hand reach) */
+.sheet-bottom { animation: sheet-in var(--motion-emphasized) var(--easing-enter) both; }
+.sheet-bottom.exiting { animation: sheet-out var(--motion-normal) var(--easing-exit) both; }
+@keyframes sheet-in { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes sheet-out { from { transform: none; } to { transform: translateY(100%); } }
+.scrim { background: var(--scrim-light); animation: fade-in var(--motion-fast) var(--easing-standard) both; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* Expandable app bar: single progress source (JS sets --appbar-p 0..1) */
+.appbar { transition: height var(--motion-normal) var(--easing-standard); }
+.appbar[data-state="dragging"] { transition: none; }
+
+/* Shared element: position/size/radius interpolated via JS/FLIP; CSS keeps identity */
+.shared-element { will-change: transform, border-radius; contain: layout paint; }
+
+/* Slider press feedback */
+input[type="range"].oneui:active::-webkit-slider-thumb { transform: scale(1.15); }
+input[type="range"].oneui { accent-color: #0381FE; }
+
+/* Skeleton-first loading (no fullscreen blocking popup) */
+.skeleton { position: relative; overflow: hidden; background: #EEEEEE; border-radius: 16px; min-height: 56px; }
+.skeleton::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.7), transparent); animation: shimmer 1.2s infinite; }
+@keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+@media (prefers-color-scheme: dark) { .skeleton { background: #2A2A2A; } }
+
+/* Focus must move into sheet/dialog and back on close (handled in JS) */
+:focus-visible { outline: 2px solid #0381FE; outline-offset: 2px; }
+
+/* Reduced motion: kill travel/parallax, short fade, keep state feedback */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: var(--motion-fast) !important; transition-duration: var(--motion-fast) !important; }
+  .nav-deeper-enter, .nav-back-exit, .nav-peer-enter, .sheet-bottom { animation-name: fade-in; }
+  .skeleton::after { animation: none; }
+}

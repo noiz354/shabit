@@ -1,0 +1,32 @@
+/* Scaffold shell: Two-Zone One UI (viewing atas, interaction bawah) + bottom tabs. */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--background);
+  color: var(--on-background);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page { max-width: 640px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; }
+
+.viewing-area { padding: 48px var(--space-24) 16px; text-align: center; }
+.viewing-area h1 { font-size: 28px; font-weight: 700; line-height: 1.2; }
+
+.interaction-area { flex: 1; padding: 16px var(--space-24) 96px; }
+.placeholder { color: var(--on-background-secondary); font-size: 14px; }
+
+.bottom-tabs {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 640px; height: 56px;
+  display: flex; background: var(--surface); border-top: 1px solid var(--divider);
+}
+.bottom-tabs a {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 500; text-decoration: none;
+  color: var(--on-background-secondary); min-height: 48px;
+}
+.bottom-tabs a[aria-current="page"] { color: var(--primary); }
+
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }

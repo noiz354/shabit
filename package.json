@@ -1,0 +1,29 @@
+{
+  "name": "habitwealth-csr",
+  "private": true,
+  "version": "0.1.0",
+  "description": "HabitWealth OneUI CSR (Preact, static deploy to PHP shared hosting)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "dayjs": "1.11.13",
+    "echarts": "5.5.1",
+    "idb-keyval": "6.2.1",
+    "navigo": "8.11.1",
+    "preact": "10.24.3"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "2.9.3",
+    "vite": "6.3.5",
+    "vite-plugin-pwa": "0.21.1",
+    "vitest": "3.1.4"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

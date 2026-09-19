@@ -1,0 +1,54 @@
+/* HabitWealth One UI tokens — dari specs/03-design-tokens.md + DESIGN.md. Kanonis. */
+:root {
+  --primary: #0381FE;
+  --primary-dark: #0072DE;
+  --control-activated: #3E91FF;
+  --background: #FFFFFF;
+  --surface: #F6F6F6;
+  --surface-variant: #EEEEEE;
+  --surface-elevated: #FFFFFF;
+  --scrim: rgba(0, 0, 0, 0.32);
+  --on-background: #000000;
+  --on-background-secondary: #666666;
+  --on-background-tertiary: #999999;
+  --on-primary: #FFFFFF;
+  --on-surface: #000000;
+  --icon-default: #252525;
+  --icon-secondary: #8C8C8C;
+  --positive: #0AA64E;
+  --negative: #D93B30;
+  --warning: #E89500;
+  --informative: #0072DE;
+  --notification-badge: #FF2D2D;
+  --divider: #E0E0E0;
+  --space-8: 8px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --radius-btn: 18px;
+  --radius-card: 16px;
+  --radius-dialog: 26px;
+  --radius-pill: 24px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary-dark: #3E91FF;
+    --background: #000000;
+    --surface: #1A1A1A;
+    --surface-variant: #2A2A2A;
+    --surface-elevated: #252525;
+    --scrim: rgba(0, 0, 0, 0.64);
+    --on-background: #FFFFFF;
+    --on-background-secondary: #999999;
+    --on-background-tertiary: #666666;
+    --on-surface: #FFFFFF;
+    --icon-default: #DEDEDE;
+    --icon-secondary: #787878;
+    --positive: #2BD671;
+    --negative: #FF6E6E;
+    --warning: #FFB74D;
+    --informative: #5BA6FF;
+    --notification-badge: #FF4D4D;
+    --divider: #333333;
+  }
+}

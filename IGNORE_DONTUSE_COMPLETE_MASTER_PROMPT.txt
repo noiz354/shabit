@@ -1,0 +1,1891 @@
+Rancangan *user journey* untuk aplikasi gabungan *habit tracker* dan *money tracker* membutuhkan alur yang mulus mulai dari autentikasi modern hingga integrasi data eksternal.
+
+Berikut adalah kumpulan *prompt* siap pakai yang bisa kamu gunakan di alat desain AI (seperti ChatGPT/Claude untuk teks UX, atau v0.dev/Galileo AI/uizard untuk UI/UX layout):
+
+---
+
+**1. Prompt: User Journey & Wireframe Overview**
+
+> **Prompt:**
+> "Buatkan arsitektur alur pengguna (*user journey map*) dan daftar *wireframe* layar untuk aplikasi seluler bernama 'Habit&Wealth'. Aplikasi ini menggabungkan *habit tracker* dan *money tracker*. Alur mencakup:
+> 1. Onboarding & Registrasi (Signup, Login, Passkey Authentication).
+> 2. Dashboard Utama (Ringkasan Habit & Keuangan).
+> 3. Modul Habit Tracker dengan integrasi data internet/IoT (*grounding* ke internet seperti smartwatch/API).
+> 4. Modul Money Tracker dengan integrasi data internet (*grounding* ke bank API/open banking/e-wallet).
+> Sajikan dalam bentuk poin-poin langkah demi langkah beserta komponen UI utama di tiap layar."
+> 
+> 
+
+---
+
+**2. Prompt: Onboarding, Signup, Login & Passkey UI**
+
+> **Prompt:**
+> "Desain alur UI/UX detailed wireframe untuk proses autentikasi aplikasi 'Habit&Wealth' dalam bentuk teks/pemicu visual:
+> * **Layar 1 (Onboarding):** 3 slide interaktif yang menjelaskan manfaat membangun kebiasaan baik dan mencatat keuangan secara beriringan.
+> * **Layar 2 (Signup/Login):** Opsi daftar/masuk menggunakan Email, Google, Apple ID, dan pendaftaran berbasis **Passkey (Biometric/FIDO2)** untuk login cepat tanpa kata sandi.
+> * **Layar 3 (Passkey Setup):** Dialog konfirmasi aktivasi Passkey menggunakan Sidik Jari / Face ID dengan penjelasan keamanan data tinggi.
+> Berikan tata letak komponen (*layout hierarchy*), *microcopy* tombol, dan indikator status untuk masing-masing layar."
+> 
+> 
+
+---
+
+**3. Prompt: Modul Habit Tracker (Grounding/Sync ke Internet)**
+
+> **Prompt:**
+> "Desain tampilan dan alur interaksi (*user flow*) untuk layar **Habit Tracker** yang mendukung integrasi data langsung dari internet (*grounding* via API/Smartwatch):
+> * **Komponen Utama:** Daftar *habit* harian dengan indikator progres (*progress bar/streak counter*).
+> * **Fitur Grounding Data:** Tombol/status 'Auto-Sync' yang menghubungkan *habit* dengan layanan pihak ketiga (contoh: *sync* data langkah/jalan dari Google Fit/Apple Health, *sync* target membaca dari Goodreads API, atau *sync* jadwal latihan dari *calendar*).
+> * **Modal Integrasi:** Layar pop-up saat pengguna menghubungkan sumber data internet baru untuk otomatisasi penandaan *habit* selesai.
+> Jelaskan struktur informasi, tombol aksi (CTA), serta umpan balik visual saat data ter-sync dari internet."
+> 
+> 
+
+---
+
+**4. Prompt: Modul Money Tracker (Grounding/Sync ke Internet)**
+
+> **Prompt:**
+> "Desain alur dan tata letak UI untuk layar **Money Tracker** yang terintegrasi langsung dengan sumber data keuangan online (*grounding* ke open banking / e-wallet API / pencatatan kurs real-time):
+> * **Dashboard Keuangan:** Total Saldo, Arus Kas (Pemasukan vs Pengeluaran), dan Grafik Anggaran Harian.
+> * **Fitur Sync Bank/E-Wallet:** Alur pengikatan akun bank atau e-wallet melalui API aman (read-only) untuk otomatis mencatat transaksi tanpa input manual.
+> * **Fitur Grounding Harga & Kurs Real-time:** Tampilan deteksi transaksi otomatis lengkap dengan konversi mata uang/kategori transaksi pintar berdasarkan lokasi dan data merchant internet.
+> Tuliskan rincian komponen UI, elemen status koneksi rekening, dan kartu riwayat transaksi."
+> 
+> 
+
+---
+
+**5. Prompt: Integrasi Habit + Money Tracker (Cross-Feature Synergy)**
+
+> **Prompt:**
+> "Buatkan skenario UI/UX yang menghubungkan antara **Habit Tracker** dan **Money Tracker**:
+> * **Fitur Financial Reward/Penalty:** Jika pengguna menyelesaikan *habit* harian, sistem memberikan *budget reward* (atau memindahkan nominal tabungan otomatis). Jika *habit* terlewat, ada catatan dampak finansial.
+> * **Layar Insight & Analitik:** Tampilan grafik yang memperlihatkan korelasi antara kedisiplinan *habit* dan efisiensi pengeluaran bulanan.
+> Berikan detail *wireframe layout* dan alur pop-up notifikasi pemicu (*trigger notification*) untuk fitur ini."
+> 
+>
+
+audit lagi biar end to end ***# Hasil Audit & Perbaikan Prompt
+
+---
+
+## 🔍 Ringkasan Temuan Audit
+
+| # | Masalah | Tingkat | Dampak |
+|---|---------|---------|--------|
+| 1 | **Istilah "grounding" salah konteks** — ini istilah LLM/RAG, bukan istilah UX/teknis yang dipahami alat desain AI | 🔴 Kritis | AI salah interpretasi, output melenceng |
+| 2 | **Tidak ada persona pengguna** — semua prompt langsung lompat ke fitur tanpa konteks siapa yang memakai | 🔴 Kritis | Desain generik, tidak *user-centered* |
+| 3 | **Format output ambigu** — "poin-poin", "teks/pemicu visual" terlalu longgar untuk alat AI | 🟠 Tinggi | Output tidak konsisten antar-*tools* |
+| 4 | **Prompt 1 terlalu gemuk** — meminta *journey map* + daftar *wireframe* sekaligus | 🟠 Tinggi | Hasil dangkal di kedua deliverable |
+| 5 | **Tidak ada *edge case*** — *empty state*, *error state*, *offline state* tidak pernah disebut | 🟠 Tinggi | Desain hanya mencakup *happy path* |
+| 6 | **Tidak ada *design constraint*** — platform (iOS/Android), gaya visual, aksesibilitas absen | 🟡 Sedang | Output tidak siap produksi |
+| 7 | **Campur bahasa tidak konsisten** — kadang "daftar", kadang "signup", kadang keduanya tanpa pola | 🟡 Sedang | AI bingung menentukan *tone* output |
+| 8 | **Prompt 5 mekanisme gamifikasi mengambang** — "budget reward/penalty" tanpa aturan konkret | 🟡 Sedang | AI mengarang logika bisnis sendiri |
+| 9 | **Tidak ada *success criteria*** — AI tidak tahu kapan output dianggap "selesai" | 🟡 Sedang | Iterasi tanpa arah |
+
+---
+
+## ✅ Versi Perbaikan (Siap Pakai)
+
+> **Catatan konvensi yang diterapkan di semua prompt:**
+> - Bahasa pengantar: **Indonesia**; istilah teknis UI/UX tetap **Inggris** dalam tanda kurung.
+> - Setiap prompt bersifat **self-contained** (bisa dipakai tanpa membaca prompt lain).
+> - Format output selalu **dieksplisitkan**.
+> - Istilah "grounding" diganti **"sinkronisasi API / integrasi pihak ketiga"**.
+
+---
+
+### Prompt 1 — Peta Perjalanan Pengguna (*User Journey Map*)
+
+```
+Konteks:
+Kamu adalah UX Researcher senior. Aplikasi "HabitWealth" adalah aplikasi mobile
+(iOS & Android) yang menggabungkan habit tracker dan money tracker untuk
+pengguna usia 22-35 tahun, pekerja muda di kota besar, yang ingin membangun
+kebiasaan positif sekaligus mengontrol pengeluaran harian.
+
+Tugas:
+Buatkan User Journey Map lengkap untuk 1 sesi penggunaan harian (dari buka
+aplikasi hingga tutup), mencakup 2 persona:
+  A. "Rina" — pengguna baru, hari pertama setelah instalasi.
+  B. "Dimas" — pengguna aktif minggu ke-4, sudah menghubungkan rekening bank.
+
+Format output (gunakan tabel Markdown):
+| Fase | Aktivitas Pengguna | Touchpoint | Emosi (1-5) | Pain Point | Opportunity |
+Sertakan minimal 6 fase: Awareness → Onboarding → First Use →
+Daily Routine → Insight Review → Retention Trigger.
+
+Batasan:
+- Fokus pada pengalaman emosional dan friction point, bukan detail UI.
+- Tandai fase mana yang melibatkan sinkronisasi API pihak ketiga
+  (health data / open banking).
+```
+
+---
+
+### Prompt 2 — Daftar Layar & Arsitektur Informasi (*Screen Inventory & IA*)
+
+```
+Konteks:
+Aplikasi "HabitWealth" (iOS & Android) menggabungkan habit tracker dan
+money tracker. Target pengguna: pekerja muda 22-35 tahun.
+
+Tugas:
+Buatkan daftar lengkap semua layar (screen inventory) beserta arsitektur
+informasi (IA) dalam bentuk tree diagram teks.
+
+Format output:
+1. Tree diagram IA (gunakan indentasi dan simbol ├─ └─).
+2. Tabel inventaris layar:
+   | No | Nama Layar | Modul | Prioritas (P0/P1/P2) | Keterangan |
+
+Batasan:
+- Kelompokkan ke dalam 4 modul: Auth, Dashboard, Habit, Money.
+- Sertakan layar untuk edge case: empty state, error state, offline mode.
+- Total layar P0 tidak lebih dari 15.
+```
+
+---
+
+### Prompt 3 — Alur Autentikasi & Passkey (*Auth Flow Wireframe*)
+
+```
+Konteks:
+Aplikasi "HabitWealth" memprioritaskan keamanan tanpa mengorbankan
+kemudahan. Pengguna target: 22-35 tahun, familiar dengan login biometrik
+tetapi belum semua paham passkey.
+
+Tugas:
+Buatkan wireframe teks (text-based wireframe) untuk 4 layar berikut:
+  1. Onboarding Carousel (3 slide, swipeable).
+  2. Signup / Login Hub (email, Google, Apple, Passkey).
+  3. Passkey Enrollment (FIDO2 — Face ID / fingerprint).
+  4. Fallback Recovery (saat biometrik gagal 3×).
+
+Format output per layar:
+  - Judul layar
+  - Layout hierarchy (header → body → footer, gunakan bullet bertingkat)
+  - Daftar komponen UI (tombol, input, ikon, ilustrasi)
+  - Microcopy untuk setiap CTA dan pesan error
+  - State: default, loading, success, error
+
+Batasan:
+- Microcopy dalam bahasa Indonesia, tone: ramah & ringkas.
+- Sertakan penjelasan keamanan data (enkripsi end-to-end) di layar 3
+  dalam bahasa yang mudah dipahami awam.
+- Jangan gunakan istilah "grounding"; gunakan "autentikasi tanpa kata sandi".
+```
+
+---
+
+### Prompt 4 — Modul Habit Tracker + Sinkronisasi API
+
+```
+Konteks:
+Modul Habit Tracker di aplikasi "HabitWealth" memungkinkan pengguna
+melacak kebiasaan harian secara manual maupun otomatis melalui
+sinkronisasi API pihak ketiga (Google Fit, Apple Health, Goodreads,
+Google Calendar).
+
+Tugas:
+Buatkan wireframe teks dan user flow untuk 3 layar:
+  1. Habit Dashboard — daftar habit hari ini dengan progress ring dan
+     streak counter.
+  2. Add/Edit Habit — form buat habit baru dengan opsi "Auto-detect
+     dari layanan eksternal".
+  3. Integration Hub — layar kelola koneksi API (connect, disconnect,
+     status sync terakhir).
+
+Format output per layar:
+  - Layout hierarchy (gunakan ASCII box atau bullet bertingkat)
+  - Komponen UI beserta state (default / active / syncing / error /
+    disconnected)
+  - Microcopy untuk tombol "Sync Now", "Disconnect", dan notifikasi
+    keberhasilan/kegagalan sync
+  - Empty state: apa yang tampil saat pengguna belum punya habit sama
+    sekali
+
+Batasan:
+- Gunakan istilah "sinkronisasi API" atau "koneksi layanan", bukan
+  "grounding".
+- Sertakan indikator visual untuk status koneksi (hijau = tersambung,
+  kuning = pending, merah = gagal).
+- Tampilkan contoh data dummy (misal: "Langkah kaki — 7.230/10.000
+  dari Google Fit").
+```
+
+---
+
+### Prompt 5 — Modul Money Tracker + Open Banking
+
+```
+Konteks:
+Modul Money Tracker di "HabitWealth" mencatat pemasukan & pengeluaran
+secara otomatis melalui koneksi read-only ke rekening bank (open banking
+API seperti Plaid/Nordigen) dan e-wallet (GoPay, OVO, Dana). Pengguna
+target memiliki 1-3 rekening aktif.
+
+Tugas:
+Buatkan wireframe teks dan user flow untuk 4 layar:
+  1. Finance Dashboard — ringkasan saldo total, cashflow bulan ini
+     (pemasukan vs pengeluaran), dan donut chart kategori.
+  2. Transaction Feed — daftar transaksi otomatis dengan filter
+     (tanggal, kategori, sumber rekening).
+  3. Connect Account — alur OAuth untuk menghubungkan rekening bank
+     atau e-wallet (pilih bank → redirect → consent → sukses).
+  4. Budget Alert — modal notifikasi saat pengeluaran mendekati 80%
+     dan 100% batas anggaran.
+
+Format output per layar:
+  - Layout hierarchy
+  - Komponen UI + state (default / loading / synced / sync-failed /
+    no-data)
+  - Microcopy untuk consent screen (jelaskan bahwa akses bersifat
+    read-only dan data terenkripsi)
+  - Empty state: saat belum ada rekening terhubung
+
+Batasan:
+- Jangan tampilkan nomor rekening asli; gunakan masking
+  (misal: "BCA •••• 4821").
+- Sertakan badge "Read-Only" dan ikon gembok di layar Connect Account.
+- Konversi mata uang hanya ditampilkan jika pengguna mengaktifkan
+  multi-currency (toggle opsional).
+```
+
+---
+
+### Prompt 6 — Fitur Silang: Habit × Money (*Cross-Feature Synergy*)
+
+```
+Konteks:
+"HabitWealth" memiliki fitur unik yang menghubungkan kedisiplinan habit
+dengan perilaku finansial. Mekanisme yang sudah disepakati tim produk:
+  - "Saving Streak": setiap hari pengguna menyelesaikan semua habit,
+    sistem memindahkan Rp X (default Rp10.000, bisa diatur) dari
+    rekening utama ke celengan digital.
+  - "Spending Insight": laporan bulanan yang menampilkan korelasi
+    antara streak habit terpanjang dan total pengeluaran impulsif.
+
+Tugas:
+Buatkan wireframe teks dan user flow untuk 3 layar:
+  1. Saving Streak Setup — layar konfigurasi nominal harian, sumber
+     rekening, dan celengan tujuan.
+  2. Streak Celebration — modal animasi saat streak tercapai (hari
+     ke-7, 30, 100) beserta ringkasan uang terkumpul.
+  3. Monthly Correlation Report — layar insight dengan scatter plot
+     (sumbu X = streak habit, sumbu Y = pengeluaran impulsif) dan
+     narasi otomatis ("Bulan ini kamu 20% lebih hemat saat streak
+     di atas 14 hari").
+
+Format output per layar:
+  - Layout hierarchy
+  - Komponen UI + state
+  - Microcopy (tone: celebratory untuk layar 2, analytical untuk
+    layar 3)
+  - Guardrail: jelaskan bagaimana sistem mencegah pemindahan dana
+    jika saldo tidak mencukupi (tampilkan warning, jangan force
+    transfer)
+
+Batasan:
+- Fitur Saving Streak bersifat opt-in (default OFF).
+- Jangan gunakan mekanisme "penalty/denda" — riset menunjukkan ini
+  menurunkan retensi. Ganti dengan "missed opportunity" framing
+  (misal: "Sayang, kamu melewatkan tabungan Rp10.000 hari ini").
+- Sertakan disclaimer bahwa korelasi ≠ sebab-akibat di layar 3.
+```
+
+---
+
+## 📋 Checklist Kualitas Prompt (untuk referensi masa depan)
+
+| Kriteria | Sebelum | Sesudah |
+|----------|---------|---------|
+| Persona & konteks pengguna | ❌ | ✅ di setiap prompt |
+| Format output eksplisit | ❌ | ✅ tabel / tree / wireframe teks |
+| Istilah teknis akurat | ❌ ("grounding") | ✅ ("sinkronisasi API") |
+| Edge case (error/empty/offline) | ❌ | ✅ di prompt 3-6 |
+| Design constraint (platform, tone) | ❌ | ✅ iOS/Android, tone disebutkan |
+| Beban kognitif per prompt | ❌ (1 prompt = 2 deliverable) | ✅ 1 prompt = 1 fokus |
+| Guardrail etika & keamanan | ❌ | ✅ (read-only, opt-in, no penalty) |
+| Self-contained | ❌ (saling bergantung) | ✅ tiap prompt berdiri sendiri |***
+
+pasti ada gap yang tidak sebutkan
+
+# 🔬 Audit End-to-End Ronde 2 — Gap Analysis Lanjutan
+
+Kamu benar. Versi perbaikan ronde 1 sudah jauh lebih baik, tapi setelah saya jalankan simulasi mental *"apa yang terjadi kalau prompt ini benar-benar di-feed ke v0, Galileo, Uizard, atau Claude secara berurutan"*, masih ada **lubang-lubang struktural** yang akan bikin output tidak bisa langsung dipakai tim produk.
+
+---
+
+## 🔍 Tabel Gap Baru yang Terdeteksi
+
+| # | Gap | Tingkat | Prompt Terkena | Dampak Nyata |
+|---|-----|---------|---------------|--------------|
+| 10 | **Aksesibilitas (WCAG) tidak pernah dieksplisitkan** — sudah disebut di audit ronde 1 tapi tidak pernah masuk ke prompt perbaikan | 🔴 Kritis | Semua | Output gagal accessibility review, harus rework total |
+| 11 | **Tidak ada sistem notifikasi** — push, in-app, scheduled reminder absen total | 🔴 Kritis | Belum ada prompt | Habit tracker tanpa reminder = retensi hancur |
+| 12 | **Kepatuhan UU PDP (Indonesia) & GDPR-like consent** — hanya disebut "enkripsi" tapi tidak ada flow consent berlapis | 🔴 Kritis | 3, 5 | Risiko hukum; app store rejection |
+| 13 | **Navigasi global tidak didefinisikan** — bottom tab? FAB? drawer? depth limit? | 🔴 Kritis | 2 | Setiap prompt menghasilkan navigasi yang saling bertabrakan |
+| 14 | **Settings & Account Deletion** — tidak ada layar pengaturan, ekspor data, hapus akun | 🟠 Tinggi | Belum ada prompt | Wajib untuk App Store & Play Store compliance |
+| 15 | **Dark mode / theming** — tidak ada instruksi | 🟠 Tinggi | Semua | Output hanya light mode, tidak realistis untuk 2025 |
+| 16 | **Widget & Home Screen** — iOS widget / Android glanceable untuk habit streak | 🟠 Tinggi | 4, 6 | Fitur retensi utama habit tracker justru tidak terdesain |
+| 17 | **Re-autentikasi biometrik untuk aksi sensitif** — lihat saldo penuh, ubah nominal transfer, hapus data | 🟠 Tinggi | 5, 6 | Celah keamanan kritis untuk app finansial |
+| 18 | **Offline-first UX detail** — disebut di Prompt 2 tapi tidak pernah dijabarkan | 🟠 Tinggi | 4, 5 | User buka app di MRT tanpa sinyal → layar blank |
+| 19 | **Loading skeleton & perceived performance** — hanya "loading" generik | 🟡 Sedang | 4, 5, 6 | Dashboard terasa lambat tanpa skeleton screen |
+| 20 | **Format angka & tanggal Indonesia** — Rp10.000 vs 10,000 IDR, DD/MM/YYYY | 🟡 Sedang | 5, 6 | AI default ke format US, output tidak lokal |
+| 21 | **Prompt 6 masih bergantung pada output Prompt 4 & 5** — klaim "self-contained" tidak sepenuhnya benar | 🟡 Sedang | 6 | AI mengarang struktur data yang tidak konsisten |
+| 22 | **Tidak ada handoff spec** — spacing grid, typography scale, color token | 🟡 Sedang | Semua | Developer tidak bisa langsung implementasi |
+| 23 | **FTUE vs Returning User state** tidak dibedakan di wireframe | 🟡 Sedang | 3–6 | Dashboard baru vs dashboard penuh terlihat sama |
+| 24 | **Data visualization interaction** — chart bisa di-tap? drill-down? time range picker? | 🟡 Sedang | 5, 6 | Chart jadi gambar statis, bukan komponen interaktif |
+| 25 | **Open banking provider lokal** — Plaid/Nordigen itu US/EU, bukan Indonesia | 🟡 Sedang | 5 | AI mengarang flow OAuth yang tidak berlaku di Indonesia |
+| 26 | **Help & Support flow** — FAQ, chat support, report bug | 🟡 Sedang | Belum ada prompt | User bingung saat sync gagal → uninstall |
+| 27 | **Multi-device sync conflict** — edit habit di HP, buka di tablet | 🟢 Rendah | 4 | Edge case tapi relevan untuk power user |
+
+---
+
+## 🛠️ Patch Per Prompt (Tambalan Spesifik)
+
+### Patch Prompt 1 — Journey Map
+
+**Gap yang masih ada:**
+- Tidak ada fase **"Notification Re-engagement"** (bagaimana user kembali ke app setelah push notification)
+- Persona Rina & Dimas bagus, tapi tidak ada **persona "Budi" — pengguna yang churn di minggu ke-2** (critical untuk memahami drop-off)
+- Tidak ada kolom **"Channel"** (apakah touchpoint terjadi di in-app, push notification, email, atau widget)
+
+**Tambalan yang perlu ditambahkan:**
+```
+Tambahan persona:
+  C. "Budi" — pengguna yang berhenti membuka app setelah hari ke-10
+     (churned). Petakan di fase mana dia berhenti dan mengapa.
+
+Tambahan kolom tabel:
+  | ... | Channel (in-app / push / widget / email) |
+
+Tambahan fase wajib:
+  - Notification Re-engagement (user menerima push reminder → buka app)
+  - Churn Point (tandai di fase mana user biasanya berhenti)
+```
+
+---
+
+### Patch Prompt 2 — Screen Inventory & IA
+
+**Gap yang masih ada:**
+- Tree IA tidak menyebutkan **navigasi global** (bottom tab bar dengan berapa tab?)
+- Tidak ada modul **Settings** dan **Notifications**
+- Tidak ada batasan **kedalaman navigasi** (max 3 level dari root?)
+- Tidak ada layar **Account Deletion** (wajib UU PDP & App Store)
+
+**Tambalan yang perlu ditambahkan:**
+```
+Batasan tambahan:
+- Definisikan navigasi global: bottom tab bar (maks 5 tab) + FAB
+  jika perlu. Sebutkan tab mana saja.
+- Tambahkan modul ke-5: "Settings & Account" yang mencakup:
+  Profile, Notification Preferences, Data & Privacy, Export Data,
+  Delete Account, Help & Support.
+- Tambahkan modul ke-6: "Notifications Center" (in-app inbox).
+- Kedalaman navigasi maks 3 level dari root (tab → screen → detail).
+- Sertakan layar "Delete Account Confirmation" dengan cooling-off
+  period (wajib UU PDP Pasal 32).
+- Total layar P0 direvisi menjadi maks 20 (naik dari 15 karena
+  penambahan Settings).
+```
+
+---
+
+### Patch Prompt 3 — Auth Flow
+
+**Gap yang masih ada:**
+- Tidak ada **consent screen UU PDP** sebelum signup (persetujuan pengumpulan data pribadi, data finansial, data kesehatan)
+- Tidak ada opsi **"Skip" atau "Later"** untuk passkey enrollment (memaksa passkey di hari pertama = friction)
+- Tidak ada **session management** (auto-logout setelah berapa lama? re-auth untuk aksi sensitif?)
+- Microcopy keamanan di layar 3 masih terlalu abstrak — perlu contoh konkret
+
+**Tambalan yang perlu ditambahkan:**
+```
+Tambahan layar:
+  5. Data Consent Screen (sebelum signup) — 3 layer consent:
+     a. Data dasar (nama, email) — wajib
+     b. Data kesehatan (langkah, tidur) — opsional, bisa nanti
+     c. Data finansial (rekening, transaksi) — opsional, bisa nanti
+     Microcopy harus merujuk UU PDP No. 27/2022 secara ringkas.
+
+Batasan tambahan:
+- Layar 3 (Passkey Enrollment) harus punya tombol "Nanti Saja"
+  yang mengarah ke Dashboard dengan badge reminder di Settings.
+- Tambahkan catatan session: "Auto-logout setelah 30 hari tidak
+  aktif. Re-auth biometrik diperlukan untuk: melihat saldo lengkap,
+  mengubah nominal Saving Streak, menghapus akun."
+- Contoh microcopy keamanan layar 3:
+  "Wajahmu adalah kuncimu. Data biometrik tersimpan di chip
+  keamanan HP-mu, bukan di server kami. Bahkan tim HabitWealth
+  tidak bisa mengaksesnya."
+```
+
+---
+
+### Patch Prompt 4 — Habit Tracker
+
+**Gap yang masih ada:**
+- Tidak ada **reminder/notification setup** per habit (jam berapa? hari apa?)
+- Tidak ada **widget home screen** spec
+- Tidak ada **streak freeze** mechanic (user sakit / liburan → streak tidak reset)
+- Empty state sudah disebut tapi tidak ada **"first habit suggestion"** (template)
+- Tidak ada **dark mode** spec untuk progress ring dan warna streak
+
+**Tambalan yang perlu ditambahkan:**
+```
+Tambahan layar:
+  4. Habit Reminder Setup — pilih hari & jam notifikasi per habit,
+     dengan opsi "Smart Reminder" (AI sesuaikan berdasarkan waktu
+     user biasanya menyelesaikan habit).
+  5. Streak Freeze — layar konfirmasi penggunaan "freeze" (maks 2×
+     per bulan, gratis) saat user tidak bisa menyelesaikan habit.
+
+Tambahan komponen di layar 1 (Habit Dashboard):
+  - Widget preview card: "Tambahkan ke Home Screen" (iOS widget /
+    Android glanceable) yang menampilkan streak hari ini.
+
+Batasan tambahan:
+- Sertakan state dark mode untuk semua komponen (sebutkan perubahan
+  warna spesifik: misal progress ring hijau #4ADE80 → #22C55E).
+- Empty state harus menampilkan 3 template habit populer
+  (misal: "Minum 8 gelas air", "Jalan 10.000 langkah", "Baca 20
+  halaman") dengan tombol "Tambah Cepat".
+- Format angka Indonesia: "7.230" bukan "7,230".
+```
+
+---
+
+### Patch Prompt 5 — Money Tracker
+
+**Gap yang masih ada:**
+- **Plaid/Nordigen tidak beroperasi di Indonesia** — harusnya Ayoconnect, Bricks, atau Yodlee yang punya coverage bank lokal
+- Tidak ada **re-auth biometrik** sebelum menampilkan saldo lengkap
+- Tidak ada **masking toggle** (tap untuk reveal saldo)
+- Tidak ada **transaction categorization AI** — user perlu bisa koreksi kategori yang salah
+- Tidak ada **offline state** detail: apa yang tampil saat data belum sync?
+- Donut chart tidak ada interaction spec (tap slice → filter transaction feed?)
+
+**Tambalan yang perlu ditambahkan:**
+```
+Koreksi konteks:
+- Ganti "Plaid/Nordigen" dengan "open banking aggregator yang
+  mendukung bank Indonesia (BCA, Mandiri, BNI, BRI, CIMB, dll)
+  dan e-wallet (GoPay, OVO, Dana, ShopeePay)". Jangan sebut
+  nama provider spesifik kecuali diminta.
+
+Tambahan layar:
+  5. Transaction Detail & Recategorize — layar detail transaksi
+     dengan opsi ubah kategori (AI salah kategorikan "Starbucks"
+     sebagai "Makanan" → user ubah ke "Ngopi").
+
+Batasan tambahan:
+- Layar 1 (Finance Dashboard): saldo default di-mask
+  (Rp••••••••). Tap ikon mata 👁 untuk reveal, wajib re-auth
+  biometrik.
+- Layar 2 (Transaction Feed): setiap transaksi punya ikon "✏️"
+  untuk koreksi kategori. Jika user koreksi ≥3× kategori yang
+  sama, tampilkan toast: "Kami akan belajar dari koreksimu."
+- Donut chart: tap slice → filter Transaction Feed ke kategori
+  tersebut. Pinch-to-zoom tidak diperlukan.
+- Offline state: tampilkan data terakhir yang berhasil di-sync
+  dengan timestamp "Terakhir diperbarui: 2 jam lalu" dan tombol
+  "Coba Sync Ulang". Jangan tampilkan layar kosong.
+- Format: Rp10.000 (titik pemisah ribuan, tanpa spasi).
+  Tanggal: 17 Jun 2025 (format Indonesia singkat).
+```
+
+---
+
+### Patch Prompt 6 — Cross-Feature Synergy
+
+**Gap yang masih ada:**
+- Klaim "self-contained" **tidak benar** — prompt ini merujuk "rekening utama" dan "celengan digital" yang strukturnya belum didefinisikan di prompt manapun
+- Tidak ada **celengan digital detail** — apakah ini virtual account? e-wallet internal? saldo terpisah?
+- Tidak ada **undo/cancel transfer** jika user tidak sengaja mengaktifkan Saving Streak
+- Scatter plot di layar 3 terlalu kompleks untuk pengguna awam — perlu alternatif visualisasi yang lebih sederhana
+- Tidak ada **tax implication disclaimer** (pemindahan dana otomatis bisa dianggap transaksi oleh bank)
+
+**Tambalan yang perlu ditambahkan:**
+```
+Konteks tambahan (agar benar-benar self-contained):
+- "Celengan digital" adalah saldo virtual di dalam aplikasi yang
+  tercatat sebagai sub-ledger, BUKAN rekening bank terpisah.
+  Dana tetap di rekening utama hingga user melakukan "Withdraw"
+  manual. (Ini menyederhanakan regulasi dan menghindari isu
+  lisensi perbankan.)
+
+Tambahan layar:
+  4. Withdraw from Celengan — layar tarik dana dari celengan ke
+     rekening utama, dengan konfirmasi biometrik.
+
+Batasan tambahan:
+- Layar 3 (Monthly Report): scatter plot hanya tampil jika data
+  ≥ 3 bulan. Untuk bulan 1-2, ganti dengan bar chart sederhana
+  (streak vs pengeluaran per minggu).
+- Tambahkan disclaimer di layar 1: "Dana di celengan masih berada
+  di rekeningmu. HabitWealth tidak menyimpan atau memindahkan
+  uangmu ke pihak ketiga."
+- Sertakan "Undo" toast selama 5 detik setelah auto-save:
+  "Rp10.000 masuk celengan ✓ [Batalkan]"
+- Tambahkan edge case: jika saldo rekening < nominal Saving Streak,
+  tampilkan "Saldo tidak cukup untuk tabungan hari ini. Streak
+  habit-mu tetap aman! 💪" — JANGAN tampilkan error merah.
+```
+
+---
+
+## 🆕 Prompt Baru yang Harus Ditambahkan
+
+### Prompt 7 — Sistem Notifikasi & Re-engagement
+
+```
+Konteks:
+Aplikasi "HabitWealth" (iOS & Android) membutuhkan sistem notifikasi
+multi-channel untuk menjaga retensi. Pengguna target (22-35 tahun)
+rentan terhadap notification fatigue — terlalu banyak notifikasi
+= uninstall.
+
+Tugas:
+Buatkan wireframe teks dan notification matrix untuk:
+  1. Notification Preferences — layar pengaturan granular per
+     kategori (Habit Reminder, Budget Alert, Streak Celebration,
+     Weekly Report, Promosi). Setiap kategori punya toggle ON/OFF
+     dan pilihan channel (push / in-app / email).
+  2. In-App Notification Center — inbox notifikasi dengan tab
+     "Belum Dibaca" dan "Arsip", grouped by tanggal.
+  3. Push Notification Templates — buat 8 template copy untuk:
+     a. Habit reminder pagi (07:00)
+     b. Habit reminder sore (18:00, jika belum complete)
+     c. Streak milestone (hari ke-7, 30)
+     d. Budget warning 80%
+     e. Budget exceeded 100%
+     f. Saving Streak success
+     g. Saving Streak missed (missed opportunity framing)
+     h. Weekly insight summary
+
+Format output:
+  - Wireframe teks untuk layar 1 & 2 (layout + komponen + state)
+  - Tabel untuk template push (layar 3):
+    | No | Trigger | Timing | Copy (max 40 karakter) | Deep Link Target |
+  - Notification frequency cap: maks 5 push/hari, dengan prioritas
+    (budget alert > habit reminder > celebration).
+
+Batasan:
+- Tone: ramah, tidak menggurui, tidak guilt-tripping.
+- Semua notifikasi harus bisa di-dismiss dan di-mute per kategori.
+- Sertakan "Quiet Hours" setting (default 22:00-07:00, no push).
+- Dark mode spec untuk in-app notification center.
+```
+
+---
+
+### Prompt 8 — Settings, Privacy & Account Lifecycle
+
+```
+Konteks:
+Aplikasi "HabitWealth" menangani data sensitif (kesehatan + finansial).
+Kepatuhan terhadap UU PDP No. 27/2022 dan kebijakan App Store/Play
+Store adalah mandatory.
+
+Tugas:
+Buatkan wireframe teks untuk 6 layar:
+  1. Settings Hub — menu utama dengan grouping: Akun, Notifikasi,
+     Data & Privasi, Tampilan, Bantuan, Tentang.
+  2. Data & Privacy — daftar data yang dikumpulkan, sumber API
+     yang terhubung, tombol "Unduh Data Saya" (JSON/CSV), dan
+     "Hapus Akun".
+  3. Delete Account — flow 3 langkah: konfirmasi → alasan (opsional)
+     → cooling-off 14 hari dengan opsi "Batalkan Penghapusan".
+  4. Appearance — toggle Dark/Light/System, pilihan warna aksen
+     (3 opsi), ukuran font (kecil/sedang/besar).
+  5. Help & Support — FAQ accordion, "Chat dengan Kami" (placeholder
+     untuk integrasi Intercom/Zendesk), "Laporkan Bug" form.
+  6. About — versi app, changelog, legal (Kebijakan Privasi,
+     Syarat & Ketentuan), lisensi open-source.
+
+Format output per layar:
+  - Layout hierarchy
+  - Komponen UI + state
+  - Microcopy (tone: formal-ringkas untuk legal, ramah untuk FAQ)
+
+Batasan:
+- Layar 3 (Delete Account) harus menampilkan warning: "Semua data
+  habit, transaksi, dan celengan akan dihapus permanen setelah
+  14 hari. Tindakan ini tidak bisa dibatalkan."
+- Sertakan re-auth biometrik sebelum masuk ke layar 2 dan 3.
+- "Unduh Data Saya" harus menampilkan estimasi waktu proses
+  (misal: "Siap dalam 24 jam, kami akan kirim email").
+- Dark mode spec untuk semua layar.
+- Aksesibilitas: semua toggle harus punya label screen reader
+  yang jelas (misal: "Mode gelap, saat ini mati").
+```
+
+---
+
+### Prompt 9 — Design System Handoff Spec
+
+```
+Konteks:
+Tim developer membutuhkan spesifikasi design system dasar dari
+seluruh wireframe HabitWealth yang sudah dibuat (Prompt 1-8).
+
+Tugas:
+Buatkan ringkasan design system yang mencakup:
+  1. Color Tokens — primary, secondary, semantic (success, warning,
+     error, info), neutral scale (50-900), dark mode mapping.
+  2. Typography Scale — font family (rekomendasi: system font stack
+     iOS/Android), size hierarchy (H1-Caption), line height, weight.
+  3. Spacing System — 4pt grid, spacing tokens (xs/sm/md/lg/xl/2xl).
+  4. Component Library — daftar komponen yang sudah digunakan di
+     semua wireframe (button, input, card, modal, bottom sheet,
+     tab bar, progress ring, chart, badge, toast, skeleton).
+  5. Elevation & Shadow — 3 level (card, modal, tooltip).
+  6. Motion Spec — durasi transisi standar (fast 150ms, normal
+     300ms, slow 500ms), easing curve.
+  7. Accessibility Checklist — contrast ratio min 4.5:1 (AA),
+     touch target min 44×44pt, dynamic type support.
+
+Format output:
+  - Tabel per kategori (token name | value light | value dark | usage)
+  - Contoh penggunaan per komponen
+
+Batasan:
+- Gunakan format yang bisa langsung di-copy ke Figma Tokens /
+  Style Dictionary (JSON-like structure untuk color & spacing).
+- Jangan buat brand baru; gunakan sistem yang netral dan bisa
+  di-skin kemudian.
+- Sertakan catatan: "Ini adalah baseline. Brand designer akan
+  menyesuaikan color dan typography final."
+```
+
+---
+
+## 📊 Perbandingan Ronde 1 vs Ronde 2
+
+| Aspek | Ronde 1 (Audit Awal) | Ronde 2 (Audit E2E) |
+|-------|---------------------|---------------------|
+| Istilah teknis | ✅ Diperbaiki | ✅ Tetap |
+| Persona | ✅ Ditambahkan | ⚠️ Perlu +1 persona churn |
+| Format output | ✅ Dieksplisitkan | ✅ Tetap |
+| Beban per prompt | ✅ Dipecah | ⚠️ Prompt 6 masih berat |
+| Edge case dasar | ✅ Ditambahkan | ⚠️ Offline & skeleton belum detail |
+| **Aksesibilitas** | ❌ Disebut tapi tidak di-fix | ✅ Patch + Prompt 9 |
+| **Notifikasi** | ❌ Absen total | ✅ Prompt 7 baru |
+| **UU PDP / Legal** | ❌ Absen total | ✅ Patch 3 + Prompt 8 |
+| **Navigasi global** | ❌ Tidak didefinisikan | ✅ Patch 2 |
+| **Dark mode** | ❌ Absen | ✅ Patch semua + Prompt 8 |
+| **Settings & Deletion** | ❌ Absen | ✅ Prompt 8 baru |
+| **Widget** | ❌ Absen | ✅ Patch 4 |
+| **Re-auth biometrik** | ❌ Absen | ✅ Patch 3, 5 |
+| **Lokalisasi Indonesia** | ❌ Format US | ✅ Patch 4, 5 |
+| **Provider lokal** | ❌ Plaid/Nordigen | ✅ Patch 5 |
+| **Design system handoff** | ❌ Absen | ✅ Prompt 9 baru |
+| **Self-contained claim** | ⚠️ Klaim tapi tidak 100% | ✅ Patch 6 + konteks tambahan |
+| **Total prompt** | 6 | **9** |
+
+---
+
+## 🎯 Rekomendasi Urutan Eksekusi
+
+```
+Prompt 2 (IA + Navigasi)     ← FONDASI, kerjakan duluan
+    ↓
+Prompt 1 (Journey Map)       ← Validasi IA terhadap journey
+    ↓
+Prompt 3 (Auth + Consent)    ← Pintu masuk user
+    ↓
+Prompt 4 (Habit)             ← Core feature 1
+    ↓
+Prompt 5 (Money)             ← Core feature 2
+    ↓
+Prompt 6 (Cross-feature)     ← Differentiator
+    ↓
+Prompt 7 (Notifikasi)        ← Retention layer
+    ↓
+Prompt 8 (Settings + Legal)  ← Compliance layer
+    ↓
+Prompt 9 (Design System)     ← Handoff ke developer
+```
+
+---
+
+## ⚡ TL;DR — 5 Gap Paling Berbahaya yang Terlewat di Ronde 1
+
+1. **Tidak ada sistem notifikasi** → habit tracker tanpa reminder = dead app
+2. **Tidak ada UU PDP consent flow** → app bisa ditolak Play Store / App Store Indonesia
+3. **Plaid/Nordigen tidak ada di Indonesia** → AI akan mengarang flow OAuth yang fiktif
+4. **Tidak ada Settings & Delete Account** → violation App Store Review Guidelines §5.1.1
+5. **Aksesibilitas disebut di audit tapi tidak pernah masuk prompt** → gap antara "tahu" dan "melakukan"
+
+Dengan 9 prompt ini, kamu punya coverage **end-to-end yang sebenarnya**: dari pertama user dengar app → install → daily use → retention → compliance → developer handoff. 🚀
+
+
+# 🔬 Audit End-to-End Ronde 3 — *The Last Mile*
+
+---
+
+## Pengantar Jujur
+
+Ronde 2 sudah **sangat solid** — 27 gap teridentifikasi, 3 prompt baru, patch per-prompt. Kalau ini diserahkan ke tim produk startup, mereka sudah bisa jalan.
+
+Tapi kamu minta *end-to-end yang sebenarnya*. Jadi saya jalankan simulasi yang lebih keras: **"Apa yang terjadi saat prompt ini dipakai oleh PM junior yang belum pernah bikin app fintech, lalu hasilnya langsung diserahkan ke developer React Native yang baru join minggu lalu?"**
+
+Jawabannya: **masih ada 18 lubang yang bikin output tidak bisa langsung diimplementasi**, dan **urutan eksekusi Ronde 2 salah di satu titik kritis**.
+
+---
+
+## 🔍 Tabel Gap Ronde 3
+
+| # | Gap | Tingkat | Prompt Terkena | Dampak Nyata |
+|---|-----|---------|---------------|--------------|
+| 28 | **Tidak ada model monetisasi & paywall UX** — freemium? subscription? one-time? Ini memengaruhi IA, feature gating, dan Settings | 🔴 Kritis | 2, 4, 5, 8 | AI mengarang model bisnis sendiri; tim produk debat di tengah sprint |
+| 29 | **Urutan eksekusi salah: Design System (P9) harusnya SEBELUM wireframe, bukan sesudah** — developer butuh token warna/spacing *saat* menerima wireframe, bukan setelah | 🔴 Kritis | 9 → semua | Wireframe pakai warna sembarangan, design system jadi retrofit yang tidak konsisten |
+| 30 | **Tidak ada strategi *app permissions* timing** — iOS/Android punya aturan ketat kapan boleh minta akses Health, Notification, Biometrik. Meminta semua di Day 1 = auto-deny oleh user | 🔴 Kritis | 3, 4 | App Store rejection; user deny permission → fitur mati |
+| 31 | **Tidak ada *event tracking plan*** — tanpa definisi event analytics, tim data tidak bisa mengukur apakah habit streak benar-benar meningkatkan retensi | 🔴 Kritis | Semua | Product decision berbasis asumsi, bukan data |
+| 32 | **Tidak ada *progressive onboarding* (Day 1 vs Day 7 vs Day 30)** — semua wireframe mengasumsikan user melihat semua fitur sekaligus | 🟠 Tinggi | 3–6 | Cognitive overload di hari pertama → churn |
+| 33 | **Tidak ada *gesture & interaction vocabulary*** — swipe-to-delete, pull-to-refresh, long-press, pinch — tidak pernah didefinisikan | 🟠 Tinggi | 4, 5, 2 | Developer menebak interaksi; iOS dan Android behave berbeda |
+| 34 | **Tidak ada *haptic & audio feedback* map** — momen dopamin utama (habit completion ✓) tidak punya sensory feedback spec | 🟠 Tinggi | 4, 6 | Habit completion terasa "datar", tidak rewarding |
+| 35 | **OAuth token expiry & reconnection UX tidak ada** — token bank/e-wallet expire setiap 90-180 hari. Apa yang terjadi saat sync tiba-tiba gagal karena token mati? | 🟠 Tinggi | 5 | User lihat data kosong, panik, uninstall |
+| 36 | **Tidak ada *crash recovery* UX** — app crash saat Saving Streak sedang memindahkan dana. Apa yang tampil saat user buka ulang? | 🟠 Tinggi | 6 | Double-charge atau lost transfer → trust hancur |
+| 37 | **Tidak ada *deep link architecture*** — Prompt 7 menyebut "Deep Link Target" tapi tidak ada URL scheme yang didefinisikan | 🟠 Tinggi | 7 | Push notification tap → app buka di home screen, bukan di layar yang relevan |
+| 38 | **Tidak ada *MVP phasing*** — 9 prompt menghasilkan ~60+ layar. Mana yang v1.0, v1.1, v2.0? | 🟠 Tinggi | Semua | Tim engineering overwhelmed; tidak ada yang ship |
+| 39 | **Tidak ada *splash screen & launch performance* UX** — first impression dalam 1-2 detik pertama | 🟡 Sedang | Belum ada | App terasa lambat sebelum user lihat apapun |
+| 40 | **Tidak ada *referral & sharing* flow** — "Share streak-mu ke Instagram" adalah growth engine utama habit app | 🟡 Sedang | 4, 6 | Organic growth tidak terdesain |
+| 41 | **Tidak ada *keyboard handling* spec** — form Add Habit dan Connect Account: apa yang terjadi saat keyboard muncul? Push up? Resize? Overlay? | 🟡 Sedang | 4, 5 | Input field tertutup keyboard di Android |
+| 42 | **Tidak ada *pull-to-refresh vs auto-sync* distinction** — kapan data di-refresh manual vs otomatis? | 🟡 Sedang | 4, 5 | User pull-to-refresh 50×/hari → API rate limit |
+| 43 | **Tidak ada *empty state illustration direction*** — disebut "empty state" tapi tidak ada arahan visual (flat? 3D? Lottie?) | 🟡 Sedang | 4, 5 | AI mengarang style yang tidak konsisten |
+| 44 | **Tidak ada *prompt chaining protocol*** — bagaimana output Prompt 2 (IA) secara eksplisit membatasi Prompt 4 (Habit)? | 🟡 Sedang | Semua | Output antar-prompt bisa bertabrakan |
+| 45 | **Tidak ada *tone of voice* standalone guide** — tersebar di microcopy per-prompt tapi tidak ada referensi terpusat | 🟡 Sedang | Semua | Copywriter baru tidak bisa onboarding cepat |
+
+---
+
+## 🛠️ Patch Tambahan per Prompt
+
+### Patch Prompt 2 — IA (Revisi Kritis)
+
+**Gap #28 (Monetisasi) dan #38 (MVP Phasing) mengubah fondasi IA.**
+
+```
+Tambahan konteks WAJIB di awal prompt:
+- Model bisnis: Freemium. Fitur gratis = manual habit tracking + manual
+  money tracking + 1 rekening bank. Fitur premium (Rp29.000/bulan) =
+  unlimited bank sync, Saving Streak auto-transfer, Monthly Correlation
+  Report, widget home screen, streak freeze unlimited.
+- Tambahkan modul ke-7: "Subscription" (Paywall, Plan Comparison,
+  Manage Subscription, Restore Purchase).
+
+Tambahan batasan:
+- Setiap layar di tabel inventaris WAJIB punya kolom baru:
+  | ... | Tier (Free/Premium) | MVP Phase (v1.0/v1.1/v2.0) |
+- v1.0 = Auth + Dashboard manual + 3 habit + 1 rekening + basic
+  notification. Maks 12 layar P0.
+- v1.1 = Saving Streak + multi-bank + widget + streak freeze.
+- v2.0 = Correlation Report + referral + AI categorization.
+- Paywall screen harus muncul saat user tap fitur Premium, BUKAN
+  saat pertama buka app (no hard paywall di Day 1).
+```
+
+---
+
+### Patch Prompt 3 — Auth Flow (Revisi Permissions)
+
+**Gap #30 (App Permissions Timing) adalah masalah iOS App Review yang nyata.**
+
+```
+Tambahan layar:
+  6. Permission Primer — layar edukatif SEBELUM system permission
+     dialog muncul. Jelaskan MENGAPA app butuh akses, bukan hanya
+     APA yang diakses.
+     a. Health Data: "Untuk otomatis catat langkah & tidurmu, kami
+        butuh akses Apple Health/Google Fit. Data ini hanya tersimpan
+        di HP-mu."
+     b. Notifications: "Supaya kamu tidak lupa habit, izinkan kami
+        kirim pengingat. Bisa dimatikan kapan saja di Settings."
+     c. Biometrics: "Untuk login cepat & aman tanpa password."
+
+Batasan tambahan:
+- JANGAN minta semua permission di layar yang sama. Urutan:
+  Day 1 (signup): Biometrics only.
+  Day 1 (setelah first habit): Notifications.
+  Day 3 (setelah user buka tab Money): Health data.
+  Day 7 (setelah user connect bank): none (bank OAuth sudah handle).
+- Sertakan fallback untuk setiap permission yang di-deny:
+  "Tidak apa-apa! Kamu bisa aktifkan nanti di Settings > Privasi."
+- iOS-specific: Permission primer harus tampil SEBELUM
+  `UNUserNotificationCenter.requestAuthorization()` dipanggil.
+  Jika user tap "Nanti" di primer, jangan trigger system dialog.
+```
+
+---
+
+### Patch Prompt 4 — Habit Tracker (Revisi Interaksi)
+
+**Gap #33 (Gestures), #34 (Haptics), #41 (Keyboard), #42 (Sync).**
+
+```
+Tambahan spesifikasi interaksi (tambahkan sebagai bagian format
+output per layar):
+  - Gesture map:
+    • Swipe kiri pada habit card → "Tunda ke besok" (maks 1×/hari)
+    • Long press pada habit card → context menu (Edit, Hapus,
+      Reorder, Streak Freeze)
+    • Pull-to-refresh di dashboard → sync API pihak ketiga
+      (tampilkan spinner + "Menyinkronkan dari Google Fit...")
+    • Tap progress ring → expand detail (langkah per jam, sumber
+      data)
+  - Haptic feedback:
+    • Habit completion (tap ✓): UIImpactFeedbackGenerator .heavy
+      + confetti micro-animation 300ms
+    • Streak milestone (7/30/100): UINotificationFeedbackGenerator
+      .success + haptic pattern "•• ••• ••"
+    • Streak broken: UINotificationFeedbackGenerator .error (single)
+  - Keyboard handling:
+    • Layar Add/Edit Habit: keyboard push content up, CTA "Simpan"
+      sticky di atas keyboard
+    • Tap di luar form → keyboard dismiss → auto-save draft
+
+Tambahan batasan sync:
+- Pull-to-refresh cooldown: 30 detik. Jika user pull lagi dalam
+  30 detik, tampilkan toast "Data baru saja diperbarui ✨"
+- Auto-sync background: setiap 15 menit saat app di-foreground.
+  Jangan auto-sync saat app di-background (hemat baterai).
+```
+
+---
+
+### Patch Prompt 5 — Money Tracker (Revisi Token Expiry & Crash)
+
+**Gap #35 (OAuth Expiry) dan #36 (Crash Recovery).**
+
+```
+Tambahan layar:
+  6. Reconnect Account — layar yang muncul saat OAuth token expired.
+     Tampilan: ikon bank + "Koneksi ke BCA •••• 4821 telah berakhir.
+     Hubungkan ulang untuk melanjutkan sinkronisasi otomatis."
+     CTA: "Hubungkan Ulang" (trigger OAuth flow) + "Nanti" (data
+     tetap tampil tapi timestamp "Terakhir sync: 14 hari lalu"
+     berwarna merah).
+
+Tambahan state di semua layar:
+  - token-expired: overlay semi-transparan di atas data dengan
+    banner "Koneksi bank perlu diperbarui" + CTA
+  - sync-in-progress: skeleton screen dengan shimmer effect,
+    jangan tampilkan data lama tanpa indikator bahwa data sedang
+    di-refresh
+  - partial-sync: beberapa rekening berhasil, satu gagal. Tampilkan
+    badge per rekening, bukan error global
+
+Batasan crash recovery:
+- Jika app crash saat transaksi sedang di-sync, saat buka ulang
+  tampilkan: "Sinkronisasi terakhir tertunda. Kami akan coba lagi
+  otomatis." + tombol "Sync Sekarang".
+- JANGAN tampilkan saldo yang mungkin sudah berubah tanpa sync
+  terbaru. Tampilkan "Saldo sedang diverifikasi..." dengan skeleton.
+```
+
+---
+
+### Patch Prompt 6 — Cross-Feature (Revisi Crash & Deep Link)
+
+**Gap #36 (Crash during transfer) dan #37 (Deep Link).**
+
+```
+Tambahan guardrail kritis:
+- Saving Streak auto-transfer menggunakan mekanisme "pending queue":
+  1. Saat streak tercapai, sistem membuat "pending transfer" record
+     di local database.
+  2. Transfer dieksekusi saat app di-foreground DAN koneksi stabil.
+  3. Jika app crash sebelum eksekusi selesai, saat buka ulang app
+     mengecek pending queue dan retry.
+  4. Tampilkan status di layar 1: "Tabungan hari ini: Sedang
+     diproses..." → "Berhasil ✓" (dengan timestamp).
+- JANGAN pernah eksekusi transfer di background tanpa konfirmasi
+  user sebelumnya (opt-in di layar Saving Streak Setup).
+
+Tambahan deep link spec:
+- Definisikan URL scheme: habitwealth://
+  • habitwealth://habit/complete?id={habit_id}
+  • habitwealth://streak/celebrate?day={n}
+  • habitwealth://money/alert?type={budget_warning|exceeded}
+  • habitwealth://saving/withdraw
+  • habitwealth://settings/notifications
+- Setiap layar di wireframe harus punya catatan "Deep link:
+  habitwealth://..." di header.
+```
+
+---
+
+### Patch Prompt 7 — Notifikasi (Revisi Deep Link & Analytics)
+
+```
+Tambahan kolom tabel push template:
+  | ... | Event Name (analytics) |
+
+Contoh:
+  | 1 | habit_reminder_morning | 07:00 | "Pagi, Rina! 3 habit
+    menunggumu 🌅" | habitwealth://dashboard | notification_opened |
+
+Tambahan batasan:
+- Setiap push notification yang di-tap harus fire analytics event:
+  notification_opened {notification_id, category, deep_link}.
+- Setiap push yang di-dismiss (swipe away) harus fire:
+  notification_dismissed {notification_id, category}.
+- Quiet Hours harus menghormati time zone user (bukan server time).
+  Relevant untuk user yang traveling.
+```
+
+---
+
+### Patch Prompt 8 — Settings (Revisi Monetisasi)
+
+```
+Tambahan layar:
+  7. Subscription Management — tampilan plan saat ini (Free/Premium),
+     tanggal renewal, tombol "Upgrade" / "Downgrade" / "Cancel".
+     Jika Free: tampilkan comparison card Free vs Premium dengan
+     CTA "Coba Premium Gratis 7 Hari".
+     Jika Premium: tampilkan "Kelola via App Store" (iOS) atau
+     "Kelola via Play Store" (Android) — JANGAN buat flow cancel
+     in-app sendiri (melanggar App Store guideline).
+
+Tambahan di layar Data & Privacy:
+- Tambahkan section "Data yang Dibagikan dengan Pihak Ketiga":
+  daftar API yang terhubung + data apa yang dikirim + tombol
+  "Cabut Akses" per API.
+- Ini wajib untuk UU PDP Pasal 24 (hak atas informasi penggunaan
+  data pribadi).
+```
+
+---
+
+## 🆕 Prompt Baru Ronde 3
+
+### Prompt 10 — Event Tracking Plan & Analytics Spec
+
+```
+Konteks:
+Tim produk "HabitWealth" membutuhkan rencana pelacakan event
+(analytics tracking plan) agar bisa mengukur keberhasilan fitur
+sejak hari pertama peluncuran. Stack analytics: Firebase Analytics
++ Mixpanel (atau setara).
+
+Tugas:
+Buatkan tracking plan lengkap yang mencakup:
+  1. Core Funnel Events — dari install → signup → first habit →
+     first bank connect → first streak → first saving transfer →
+     Day 7 retention → Day 30 retention.
+  2. Feature Usage Events — per modul (Habit, Money, Cross-feature,
+     Notifications, Settings).
+  3. Error & Friction Events — sync failed, auth failed, permission
+     denied, paywall shown, paywall dismissed, crash recovery.
+  4. Revenue Events — paywall impression, trial start, subscription
+     active, subscription cancelled, subscription churned.
+
+Format output:
+  Tabel per kategori:
+  | Event Name | Trigger | Properties | Platform | Priority |
+  Contoh:
+  | habit_completed | User tap ✓ pada habit card |
+    {habit_id, habit_type (manual/auto), streak_day, time_of_day} |
+    iOS, Android | P0 |
+
+Batasan:
+- Total event P0 tidak lebih dari 25 (fokus pada yang actionable).
+- Setiap event harus punya definisi "success criteria" yang jelas
+  (misal: "habit_completed hanya fire jika progress = 100%, bukan
+  saat user tap tapi belum confirm").
+- Sertakan event untuk A/B test hooks:
+  • paywall_variant_shown {variant: A|B}
+  • onboarding_flow_completed {variant: short|long}
+- Jangan track PII (nama, email, nomor rekening) di event properties.
+  Gunakan user_id hash.
+- Format tanggal di properties: ISO 8601 (YYYY-MM-DDTHH:mm:ssZ).
+```
+
+---
+
+### Prompt 11 — Progressive Onboarding & First 30 Days UX
+
+```
+Konteks:
+Riset menunjukkan 77% user habit tracker churn dalam 7 hari pertama.
+"HabitWealth" membutuhkan strategi onboarding bertahap yang
+menyesuaikan tampilan dan fitur berdasarkan "usia" pengguna di app.
+
+Tugas:
+Buatkan matriks progressive onboarding dan wireframe teks untuk
+3 fase:
+
+  Fase 1: Day 1 (First Session, ~5 menit)
+  - Apa yang user lihat pertama kali setelah signup
+  - Berapa banyak fitur yang di-expose (hint: sedikit)
+  - "Aha moment" apa yang harus tercapai sebelum user tutup app
+  - Wireframe: Simplified Dashboard (hanya 1 modul aktif, sisanya
+    blurred/locked dengan tooltip "Buka besok!")
+
+  Fase 2: Day 3-7 (Exploration)
+  - Fitur apa yang di-unlock dan kapan
+  - How-to tooltip yang muncul contextual (bukan carousel panjang)
+  - Wireframe: Dashboard dengan 2 modul + badge "New!" di fitur
+    yang baru di-unlock
+
+  Fase 3: Day 14-30 (Power User Transition)
+  - Kapan full dashboard di-expose
+  - Kapan paywall pertama kali muncul (soft, non-intrusive)
+  - Wireframe: Full Dashboard + "Upgrade untuk unlock semua fitur"
+    banner di bawah chart
+
+Format output:
+  1. Tabel matriks onboarding:
+     | Day | Fitur yang Di-unlock | Tooltip/Coach Mark |
+       Paywall Touchpoint | Aha Moment Target |
+  2. Wireframe teks per fase (3 wireframe dashboard yang berbeda)
+  3. Flow diagram: trigger apa yang mempercepat/memperlambat
+     progression (misal: user connect bank di Day 1 → langsung
+     unlock Money Dashboard)
+
+Batasan:
+- Day 1 WAJIB bisa selesai dalam < 3 menit dari install sampai
+  first habit completion.
+- Jangan tampilkan lebih dari 2 coach mark per sesi.
+- Paywall pertama kali muncul di Day 7 ATAU saat user tap fitur
+  Premium, mana yang lebih dulu. JANGAN di Day 1.
+- Sertakan "Skip Onboarding" option untuk power user yang sudah
+  pernah pakai habit tracker lain.
+```
+
+---
+
+### Prompt 12 — Growth, Referral & Sharing UX
+
+```
+Konteks:
+"HabitWealth" mengandalkan organic growth. Fitur sharing dan referral
+harus terintegrasi alami ke dalam momen-momen emosional pengguna
+(streak milestone, saving goal tercapai), bukan sebagai afterthought.
+
+Tugas:
+Buatkan wireframe teks dan user flow untuk 3 layar:
+  1. Share Achievement — modal yang muncul setelah streak milestone
+     (7/30/100 hari) atau saving goal tercapai. Opsi share ke:
+     Instagram Story (generate image card), WhatsApp, Twitter/X,
+     Copy Link. Image card harus menampilkan streak count, avatar,
+     dan branding HabitWealth yang subtle.
+  2. Referral Program — layar "Ajak Teman" dengan unique referral
+     code, tombol "Share Link", dan progress tracker ("3 dari 5
+     teman sudah join → kamu dapat Premium gratis 1 bulan").
+  3. Referral Reward Claim — layar konfirmasi saat reward tercapai,
+     dengan CTA "Klaim Premium Gratis" dan disclaimer T&C.
+
+Format output per layar:
+  - Layout hierarchy
+  - Komponen UI + state
+  - Microcopy (tone: celebratory, tidak spammy)
+  - Deep link format untuk referral:
+    habitwealth://referral?code={REF_CODE}&source={platform}
+
+Batasan:
+- Share card TIDAK boleh menampilkan data finansial spesifik
+  (misal: "Saya sudah menabung Rp500.000!" → BUKAN. Ganti:
+  "Saya sudah menabung konsisten 30 hari! 💪").
+- Referral reward hanya berlaku untuk user baru yang menyelesaikan
+  onboarding (bukan hanya install).
+- Sertakan opsi "Jangan tampilkan lagi" di modal share (user yang
+  tidak suka share jangan dipaksa).
+- Rate limit share modal: maks 1× per milestone, jangan muncul
+  setiap hari.
+```
+
+---
+
+## 🔄 Revisi Urutan Eksekusi (Koreksi Kritis Ronde 2)
+
+Ronde 2 menempatkan Design System (P9) di **akhir**. Ini **salah secara praktis**. Developer yang menerima wireframe tanpa design system akan mengarang warna, spacing, dan typography sendiri — lalu design system jadi retrofit yang tidak konsisten.
+
+**Urutan yang benar:**
+
+```
+Fase 0: FOUNDATION (kerjakan paralel, sebelum wireframe)
+  ├── Prompt 2  (IA + Navigasi + MVP Phasing)
+  ├── Prompt 9  (Design System Baseline) ← PINDAH KE SINI
+  └── Prompt 10 (Event Tracking Plan)    ← PINDAH KE SINI
+
+Fase 1: CORE EXPERIENCE (berurutan)
+  ├── Prompt 1  (Journey Map) ← validasi IA
+  ├── Prompt 11 (Progressive Onboarding) ← BARU, sebelum wireframe detail
+  ├── Prompt 3  (Auth + Consent + Permissions)
+  ├── Prompt 4  (Habit Tracker)
+  └── Prompt 5  (Money Tracker)
+
+Fase 2: DIFFERENTIATOR & RETENTION
+  ├── Prompt 6  (Cross-Feature Synergy)
+  ├── Prompt 7  (Notifikasi & Re-engagement)
+  └── Prompt 12 (Growth & Sharing) ← BARU
+
+Fase 3: COMPLIANCE & POLISH
+  └── Prompt 8  (Settings, Privacy, Subscription, Legal)
+```
+
+**Mengapa Design System di Fase 0?**
+- Wireframe Prompt 4-8 akan menyebut "progress ring hijau", "error merah", "spacing md" — semua istilah ini harus sudah terdefinisi di Prompt 9.
+- Jika P9 di akhir, AI di Prompt 4 akan mengarang warna `#4ADE80` dan AI di Prompt 5 akan mengarang `#22C55E` untuk hal yang sama. Inkonsisten.
+
+**Mengapa Event Tracking di Fase 0?**
+- Setiap wireframe di Fase 1-2 harus mencantumkan event name di setiap interaksi kunci. Tanpa tracking plan di awal, event name akan tidak konsisten antar-prompt.
+
+---
+
+## 📋 Prompt Chaining Protocol (Meta-Layer Baru)
+
+Ini yang **sama sekali tidak ada** di Ronde 1 dan 2, tapi kritis agar output 12 prompt tidak bertabrakan:
+
+```
+ATURAN RANTAI PROMPT (wajib dibaca sebelum menjalankan prompt
+apapun):
+
+1. OUTPUT PROMPT 2 (IA) adalah "single source of truth" untuk
+   struktur layar. Prompt 3-8 TIDAK BOLEH menambah layar yang
+   tidak ada di IA tanpa merevisi Prompt 2 terlebih dahulu.
+
+2. OUTPUT PROMPT 9 (Design System) adalah "single source of truth"
+   untuk visual. Semua wireframe HARUS menggunakan token yang
+   sudah didefinisikan (warna, spacing, typography). Jika wireframe
+   butuh komponen baru, tambahkan ke Prompt 9 dulu.
+
+3. OUTPUT PROMPT 10 (Event Tracking) adalah "single source of truth"
+   untuk analytics. Setiap wireframe harus mencantumkan event name
+   dari tracking plan di setiap CTA dan interaksi kunci.
+
+4. OUTPUT PROMPT 1 (Journey Map) adalah "single source of truth"
+   untuk pain point. Setiap wireframe harus memiliki catatan
+   "Addresses pain point: [X] dari Journey Map fase [Y]".
+
+5. KONVENSI NAMA:
+   - Nama layar: PascalCase (HabitDashboard, ConnectAccount)
+   - Nama event: snake_case (habit_completed, sync_failed)
+   - Nama komponen: kebab-case (progress-ring, bottom-sheet)
+   - Nama warna: semantic (color-success, color-error), bukan
+     deskriptif (green, red)
+
+6. VERSI: Setiap output prompt harus di-header dengan:
+   "Versi: 1.0 | Tanggal: YYYY-MM-DD | Bergantung pada: P2 v1.0,
+   P9 v1.0"
+   Jika ada revisi, increment versi dan update dependensi.
+```
+
+---
+
+## 📊 Perbandingan Ronde 1 → 2 → 3
+
+| Aspek | R1 | R2 | R3 |
+|-------|----|----|-----|
+| Istilah teknis | ✅ | ✅ | ✅ |
+| Persona | ✅ | ⚠️ | ✅ +churn persona |
+| Format output | ✅ | ✅ | ✅ |
+| Edge case dasar | ✅ | ⚠️ | ✅ |
+| Aksesibilitas | ❌ | ✅ | ✅ |
+| Notifikasi | ❌ | ✅ | ✅ +deep link |
+| UU PDP / Legal | ❌ | ✅ | ✅ +data sharing |
+| Navigasi global | ❌ | ✅ | ✅ |
+| Dark mode | ❌ | ✅ | ✅ |
+| Settings & Deletion | ❌ | ✅ | ✅ |
+| Widget | ❌ | ✅ | ✅ |
+| Re-auth biometrik | ❌ | ✅ | ✅ |
+| Lokalisasi Indonesia | ❌ | ✅ | ✅ |
+| Provider lokal | ❌ | ✅ | ✅ |
+| Design system | ❌ | ✅ | ✅ **dipindah ke Fase 0** |
+| Self-contained | ⚠️ | ✅ | ✅ +chaining protocol |
+| **Monetisasi & Paywall** | ❌ | ❌ | ✅ **BARU** |
+| **App Permissions** | ❌ | ❌ | ✅ **BARU** |
+| **Event Tracking** | ❌ | ❌ | ✅ **BARU** |
+| **Progressive Onboarding** | ❌ | ❌ | ✅ **BARU** |
+| **Gesture & Haptics** | ❌ | ❌ | ✅ **BARU** |
+| **OAuth Token Expiry** | ❌ | ❌ | ✅ **BARU** |
+| **Crash Recovery** | ❌ | ❌ | ✅ **BARU** |
+| **Deep Link Architecture** | ❌ | ❌ | ✅ **BARU** |
+| **MVP Phasing** | ❌ | ❌ | ✅ **BARU** |
+| **Growth & Referral** | ❌ | ❌ | ✅ **BARU** |
+| **Prompt Chaining Protocol** | ❌ | ❌ | ✅ **BARU** |
+| **Urutan Eksekusi** | ❌ | ⚠️ Salah | ✅ **Dikoreksi** |
+| **Total prompt** | 6 | 9 | **12** |
+| **Total gap teridentifikasi** | 9 | 27 | **45** |
+
+---
+
+## ⚡ TL;DR — 5 Gap Paling Berbahaya yang Terlewat di Ronde 2
+
+1. **Design System di urutan terakhir** → wireframe sudah terlanjur pakai warna/spacing sembarangan, design system jadi retrofit yang tidak konsisten. **Fix: pindah ke Fase 0.**
+
+2. **Tidak ada monetisasi & paywall** → AI mengarang model bisnis sendiri; IA tidak punya modul Subscription; developer tidak tahu fitur mana yang di-gate. **Fix: Patch P2 + P8 + Prompt baru.**
+
+3. **Tidak ada app permissions timing** → minta Health + Notification + Biometric di Day 1 = user deny semua = fitur mati = App Store rejection. **Fix: Patch P3 dengan permission primer bertahap.**
+
+4. **Tidak ada event tracking plan** → tim data buta, product decision berbasis gut feeling, tidak bisa ukur apakah Saving Streak benar-benar meningkatkan retensi. **Fix: Prompt 10 baru di Fase 0.**
+
+5. **Tidak ada progressive onboarding** → semua fitur di-expose di Day 1 = cognitive overload = 77% churn di minggu pertama. **Fix: Prompt 11 baru dengan matriks Day 1/7/30.**
+
+---
+
+## 🏁 Catatan Penutup
+
+Dengan **12 prompt + chaining protocol + urutan eksekusi yang dikoreksi**, coverage sekarang benar-benar end-to-end:
+
+```
+Pre-install awareness
+  → App Store / landing page (di luar scope, tapi sudah di-note)
+  → Install & splash (P11)
+  → Permissions primer (P3)
+  → Auth & consent (P3)
+  → Progressive onboarding Day 1-30 (P11)
+  → Daily use: Habit (P4) + Money (P5)
+  → Cross-feature magic (P6)
+  → Retention: Notifications (P7) + Widget (P4)
+  → Growth: Sharing & Referral (P12)
+  → Monetization: Paywall (P2, P8)
+  → Compliance: PDP, Deletion, Data Export (P8)
+  → Edge cases: Offline, Crash, Token Expiry (P4, P5, P6)
+  → Analytics: Event Tracking (P10)
+  → Handoff: Design System (P9)
+```
+
+Kalau masih ada gap setelah ini, kemungkinan besar itu sudah masuk ranah **product strategy** (apakah app ini harus ada?) atau **engineering architecture** (microservice vs monolith?) — bukan lagi ranah UX prompt. 🎯
+
+# 🔬 Audit End-to-End Ronde 4 — *Final Consolidation & The Missing Layer*
+
+---
+
+## Pengantar: Mengapa Ronde 4 Masih Diperlukan
+
+Ronde 3 sudah mengidentifikasi 45 gap dan menghasilkan 12 prompt. Secara **konten UX**, itu sudah sangat komprehensif. Tapi setelah saya simulasikan skenario nyata — *"PM junior membuka dokumen ini dan mencoba menjalankannya Senin pagi"* — ada **satu masalah struktural raksasa** yang membuat semua ronde sebelumnya tidak bisa langsung dieksekusi:
+
+> **Tidak ada satu pun prompt yang "clean".** Setiap prompt sekarang terdiri dari versi asli + 2-3 lapisan patch yang tersebar di 3 dokumen berbeda. PM harus melakukan *manual merge* 50+ instruksi patch ke dalam 12 prompt sebelum bisa di-copy-paste ke AI. Ini bukan end-to-end — ini *end-to-confusion*.
+
+Selain itu, ada **3 lapisan yang sama sekali belum tersentuh** di semua ronde:
+
+1. **Data model / entity schema** — AI tahu "habit" dan "transaction" sebagai konsep UI, tapi tidak tahu struktur datanya. Developer akan membuat schema yang tidak cocok dengan wireframe.
+2. **QA acceptance criteria** — Tidak ada cara untuk memverifikasi apakah output AI "benar". PM tidak tahu kapan harus accept vs iterate.
+3. **System prompt wrapper** — Tidak ada instruksi global yang memberi AI konteks lintas-prompt, sehingga setiap prompt berjalan di "ruang hampa".
+
+---
+
+## 🔍 Tabel Gap Ronde 4 (Final)
+
+| # | Gap | Tingkat | Dampak Nyata |
+|---|-----|---------|--------------|
+| 46 | **Output terfragmentasi** — 12 prompt × 2-3 patch = ~40 dokumen terpisah. Tidak ada versi final yang clean | 🔴 Kritis | PM menghabiskan 2 hari merge manual sebelum bisa mulai |
+| 47 | **Tidak ada data model / entity schema** — "habit", "transaction", "celengan", "streak" dipakai tapi tidak pernah didefinisikan strukturnya | 🔴 Kritis | Developer buat schema sendiri → wireframe tidak implementable |
+| 48 | **Tidak ada System Prompt wrapper** — setiap prompt berjalan tanpa konteks global, AI tidak tahu ini bagian dari ekosistem 12 prompt | 🔴 Kritis | Inkonsistensi antar-output, AI "lupa" konvensi |
+| 49 | **Tidak ada QA acceptance criteria per prompt** — PM tidak punya checklist untuk menilai output AI | 🟠 Tinggi | Iterasi tanpa henti karena tidak ada definisi "selesai" |
+| 50 | **Tidak ada cross-platform divergence matrix** — iOS vs Android differences disebut sporadis, tidak sistematis | 🟠 Tinggi | Developer iOS dan Android mengimplementasi hal yang berbeda |
+| 51 | **Tidak ada security UX hardening** — screenshot blocking, screen recording prevention, clipboard clearing, jailbreak/root detection | 🟠 Tinggi | Celah keamanan untuk app finansial; OJK/Bank Indonesia compliance |
+| 52 | **P3 (Auth) vs P11 (Onboarding) overlap** — Day 1 experience terpecah di dua prompt tanpa handoff point yang jelas | 🟡 Sedang | AI menghasilkan dua versi Day 1 yang bertabrakan |
+| 53 | **Tidak ada performance budget** — load time target, sync timeout, animation FPS, skeleton duration | 🟡 Sedang | App terasa lambat, user churn tanpa tahu kenapa |
+| 54 | **Tidak ada App Store / Play Store listing spec** — screenshot, description, keywords, preview video untuk launch | 🟡 Sedang | Launch tertunda karena aset store belum siap |
+| 55 | **Tidak ada stakeholder review checkpoint** — kapan PM menunjukkan output ke founder/CTO untuk approval? | 🟢 Rendah | Revisi besar di akhir karena stakeholder tidak dilibatkan |
+
+---
+
+## 🛠️ Solusi Ronde 4: 3 Deliverable Baru
+
+### Deliverable A — System Prompt Wrapper (WAJIB di-copy SEBELUM prompt apapun)
+
+Ini adalah **instruksi global** yang harus di-paste di awal sesi chat dengan AI, atau di-set sebagai system prompt. Fungsinya: memberi AI "memori" dan "aturan main" lintas-prompt.
+
+```
+═══════════════════════════════════════════════════════════
+SYSTEM PROMPT — HabitWealth UX Design Suite
+Versi: 4.0 | Tanggal: 2025-07-11
+═══════════════════════════════════════════════════════════
+
+KONTEKS PROYEK:
+Kamu adalah tim desain produk senior (UX Researcher + UX Designer +
+UI Designer + Content Strategist) untuk aplikasi mobile "HabitWealth".
+
+HabitWealth adalah aplikasi iOS & Android yang menggabungkan:
+  1. Habit Tracker (manual + auto-sync dari health API)
+  2. Money Tracker (manual + auto-sync dari open banking API)
+  3. Cross-Feature Synergy (Saving Streak, Correlation Report)
+
+Target pengguna: Pekerja muda 22-35 tahun di kota besar Indonesia.
+Model bisnis: Freemium (Free tier + Premium Rp29.000/bulan).
+Stack teknis: React Native, Firebase, Mixpanel.
+Regulasi: UU PDP No. 27/2022, App Store Guidelines, Play Store
+           Policies, OJK POJK untuk open banking.
+
+ATURAN GLOBAL (berlaku untuk SEMUA prompt):
+
+1. BAHASA:
+   - Pengantar & microcopy: Bahasa Indonesia (formal-ringkas untuk
+     legal, ramah-casual untuk UI).
+   - Istilah teknis UI/UX: Inggris dalam tanda kurung, misal
+     "halaman utama (Dashboard)".
+   - Format angka: Rp10.000 (titik ribuan, tanpa spasi).
+   - Format tanggal: 17 Jun 2025 (DD Mon YYYY, singkat).
+   - Format waktu: 07.00 / 18.30 (titik, 24 jam).
+
+2. PLATFORM:
+   - Default: iOS (Human Interface Guidelines) + Android
+     (Material Design 3).
+   - Jika ada perbedaan platform, sebutkan keduanya secara eksplisit
+     dalam format: [iOS] ... / [Android] ...
+   - Navigasi: Bottom Tab Bar (maks 5 tab) + FAB jika perlu.
+   - Kedalaman maks: 3 level dari root (Tab → Screen → Detail).
+
+3. AKSESIBILITAS (WCAG 2.1 AA):
+   - Contrast ratio min 4.5:1 untuk teks normal, 3:1 untuk teks besar.
+   - Touch target min 44×44pt (iOS) / 48×48dp (Android).
+   - Semua komponen interaktif punya label screen reader.
+   - Support Dynamic Type (iOS) / Font Scale (Android).
+   - Jangan andalkan warna saja untuk menyampaikan informasi.
+
+4. DARK MODE:
+   - Setiap komponen UI harus menyebutkan varian light & dark.
+   - Gunakan semantic color tokens (color-surface, color-on-surface),
+     bukan hardcode hex.
+
+5. KEAMANAN:
+   - Layar sensitif (saldo, transaksi, passkey): blokir screenshot
+     [Android: FLAG_SECURE] / tampilkan warning [iOS].
+   - Clipboard auto-clear setelah 60 detik untuk data finansial.
+   - Re-auth biometrik wajib untuk: lihat saldo full, ubah nominal
+     transfer, hapus akun, export data.
+   - Deteksi jailbreak/root: tampilkan warning, jangan block total.
+
+6. PERFORMANCE BUDGET:
+   - Cold start → interactive: < 2 detik.
+   - Dashboard load (cached): < 500ms.
+   - API sync: < 5 detik (tampilkan skeleton, jangan spinner).
+   - Skeleton duration: min 300ms (hindari flicker), max 10 detik
+     (setelah itu tampilkan error state).
+   - Animasi: 60 FPS, durasi standar 300ms (ease-out).
+
+7. KONVENSI NAMA:
+   - Nama layar: PascalCase (HabitDashboard, ConnectAccount).
+   - Nama event analytics: snake_case (habit_completed, sync_failed).
+   - Nama komponen: kebab-case (progress-ring, bottom-sheet).
+   - Nama warna: semantic (color-success, color-error).
+   - Nama modul: Auth, Dashboard, Habit, Money, CrossFeature,
+     Notification, Settings, Subscription.
+
+8. MVP PHASING:
+   - v1.0 (Launch): Auth + Manual Habit + Manual Money + 1 Bank
+     Sync + Basic Notification. Maks 12 layar P0.
+   - v1.1 (Month 2): Saving Streak + Multi-Bank + Widget +
+     Streak Freeze.
+   - v2.0 (Month 4): Correlation Report + Referral + AI
+     Categorization + Multi-Currency.
+
+9. FORMAT OUTPUT STANDAR:
+   - Wireframe: Text-based dengan layout hierarchy bertingkat.
+   - State wajib per komponen: default, loading, success, error,
+     empty, offline, disabled.
+   - Setiap layar harus mencantumkan:
+     a. Deep link URL (habitwealth://...)
+     b. Event analytics yang di-fire (snake_case)
+     c. Pain point yang di-address dari Journey Map
+     d. Tier (Free/Premium) dan MVP Phase (v1.0/v1.1/v2.0)
+
+10. DEPENDENSI:
+    - Prompt 2 (IA) = single source of truth untuk struktur layar.
+    - Prompt 9 (Design System) = single source of truth untuk visual.
+    - Prompt 10 (Event Tracking) = single source of truth untuk
+      analytics.
+    - Prompt 13 (Data Model) = single source of truth untuk
+      struktur data.
+    - Jangan menambah layar/event/entity baru tanpa merevisi
+      prompt sumber terlebih dahulu.
+
+JIKA KAMU MEMAHAMI SEMUA ATURAN DI ATAS, JAWAB:
+"✅ HabitWealth Design Suite v4.0 loaded. Siap menerima prompt."
+Lalu tunggu instruksi selanjutnya.
+═══════════════════════════════════════════════════════════
+```
+
+---
+
+### Deliverable B — 3 Prompt Baru (P13, P14, P15)
+
+#### Prompt 13 — Data Model & Entity Schema
+
+```
+Versi: 1.0 | Bergantung pada: P2 v1.0, P4 v1.0, P5 v1.0, P6 v1.0
+
+Konteks:
+Tim developer HabitWealth membutuhkan definisi struktur data
+(entity schema) yang konsisten dengan seluruh wireframe yang
+sudah dibuat (Prompt 2-8). Tanpa schema ini, developer akan
+membuat struktur data sendiri yang mungkin tidak cocok dengan
+UI yang sudah didesain.
+
+Tugas:
+Buatkan entity schema lengkap untuk 8 entitas utama aplikasi
+HabitWealth. Untuk setiap entitas, sertakan:
+  - Nama entitas (PascalCase)
+  - Daftar field (nama, tipe data, required/optional, default value)
+  - Relasi antar-entitas (one-to-many, many-to-many)
+  - Contoh data dummy (format Indonesia)
+  - Catatan privasi (field mana yang PII, mana yang terenkripsi)
+
+Daftar entitas wajib:
+  1. User — profil pengguna, preferensi, tier subscription
+  2. Habit — definisi habit (nama, frekuensi, target, sumber data)
+  3. HabitLog — catatan harian penyelesaian habit (tanggal, status,
+     sumber sync, streak count)
+  4. Account — rekening bank / e-wallet yang terhubung (provider,
+     masked number, OAuth token status, last sync)
+  5. Transaction — catatan transaksi (tanggal, nominal, kategori,
+     sumber rekening, AI confidence score, user-corrected flag)
+  6. Budget — anggaran per kategori (nominal, periode, alert
+     threshold 80%/100%)
+  7. Celengan — saldo virtual Saving Streak (total terkumpul,
+     target, sumber rekening, status pending queue)
+  8. Notification — log notifikasi (tipe, channel, status
+     delivered/opened/dismissed, deep link)
+
+Format output:
+  Per entitas, gunakan tabel:
+  | Field | Tipe | Required | Default | PII? | Keterangan |
+
+  Lalu diagram relasi teks:
+  User 1──* Habit
+  User 1──* Account
+  Account 1──* Transaction
+  ...
+
+Batasan:
+  - Gunakan tipe data yang kompatibel dengan Firebase Firestore
+    (string, number, boolean, timestamp, array, map).
+  - Field PII (nama, email, nomor rekening) harus ditandai
+    "ENCRYPTED" di kolom keterangan.
+  - Sertakan field "created_at", "updated_at", "deleted_at"
+    (soft delete) di SEMUA entitas.
+  - Transaction.category harus mendukung koreksi user: field
+    "ai_category" (dari AI) + "user_category" (dari user, nullable).
+    Jika user_category != null, gunakan itu.
+  - Celengan BUKAN rekening bank. Ini adalah virtual ledger.
+    Field "balance" adalah integer (dalam Rupiah, tanpa desimal).
+  - HabitLog.streak_count dihitung server-side, bukan client-side
+    (untuk mencegah manipulasi).
+  - Sertakan index recommendation untuk query yang sering
+    (misal: Transaction by date range, HabitLog by habit_id + date).
+```
+
+---
+
+#### Prompt 14 — QA Acceptance Criteria & Test Scenarios
+
+```
+Versi: 1.0 | Bergantung pada: P1-P13 (semua)
+
+Konteks:
+Setelah seluruh wireframe dan spesifikasi HabitWealth selesai
+dibuat (Prompt 1-13), PM membutuhkan checklist QA untuk
+memverifikasi bahwa output AI sudah benar, konsisten, dan
+siap diserahkan ke developer.
+
+Tugas:
+Buatkan acceptance criteria dan test scenario untuk SETIAP
+prompt (P1-P13). Untuk setiap prompt, sertakan:
+
+  1. Acceptance Criteria (checklist ✅/❌):
+     - Apa yang HARUS ada di output agar dianggap "selesai"
+     - Apa yang TIDAK BOLEH ada (anti-pattern)
+     - Konsistensi yang harus dicek terhadap prompt lain
+
+  2. Test Scenarios (3-5 per prompt):
+     - Skenario happy path
+     - Skenario edge case
+     - Skenario error/failure
+     - Format: "GIVEN [kondisi], WHEN [aksi], THEN [hasil]"
+
+  3. Cross-Prompt Consistency Check:
+     - Daftar pengecekan silang antar-prompt
+     - Contoh: "Cek apakah semua layar di P4 ada di IA P2"
+     - Contoh: "Cek apakah semua event di P4 ada di P10"
+
+Format output:
+  Per prompt, gunakan tabel:
+  | # | Kriteria | Status (✅/❌) | Catatan |
+
+  Untuk test scenario:
+  | # | Given | When | Then | Priority |
+
+  Untuk cross-check:
+  | Prompt A | Prompt B | Yang Dicek | Status |
+
+Batasan:
+  - Total acceptance criteria per prompt: 5-10 item (jangan
+    berlebihan, fokus pada yang critical).
+  - Test scenario harus bisa dijalankan oleh PM tanpa bantuan
+    developer (berbasis visual/logika, bukan kode).
+  - Sertakan "Kill Criteria" — kondisi di mana output HARUS
+    ditolak dan di-regenerate (misal: "Jika P5 menampilkan
+    nomor rekening full tanpa masking → REJECT").
+  - Sertakan checklist final "Go/No-Go" untuk handoff ke
+    developer.
+```
+
+---
+
+#### Prompt 15 — App Store & Play Store Listing Assets
+
+```
+Versi: 1.0 | Bergantung pada: P2 v1.0, P9 v1.0, P11 v1.0
+
+Konteks:
+"HabitWealth" akan diluncurkan di Apple App Store dan Google
+Play Store. Tim membutuhkan spesifikasi aset listing yang
+konsisten dengan design system (P9) dan fitur MVP (P2).
+
+Tugas:
+Buatkan spesifikasi lengkap untuk listing app store:
+
+  1. App Metadata:
+     - Nama app (30 karakter maks) + subtitle (30 karakter)
+     - Deskripsi singkat (80 karakter) — 3 varian untuk A/B test
+     - Deskripsi panjang (4000 karakter) — struktur: hook →
+       problem → solution → features → social proof → CTA
+     - Keywords (100 karakter, comma-separated, iOS)
+     - Kategori: App Store (Health & Fitness + Finance) /
+       Play Store (Health & Fitness)
+
+  2. Screenshot Spec (6-10 per platform):
+     - Urutan screenshot (yang pertama = yang paling impactful)
+     - Per screenshot: layar mana yang ditampilkan, headline
+       overlay (max 8 kata), background color (dari design system)
+     - Device frame: iPhone 15 Pro (6.7") + Pixel 8 Pro (6.7")
+     - Dark mode screenshot: min 2 dari 6
+
+  3. App Preview Video (15-30 detik):
+     - Storyboard: scene-by-scene dengan durasi per scene
+     - Voiceover script (Bahasa Indonesia, casual)
+     - Musik mood: upbeat, modern, tidak distracting
+
+  4. Feature Graphic (Play Store, 1024×500):
+     - Layout: logo + tagline + 2-3 UI mockup
+     - Color: primary gradient dari design system
+
+  5. App Icon Spec:
+     - Konsep: 3 varian (A: logo letter, B: icon metaphor,
+       C: abstract shape)
+     - Constraints: no text, recognizable at 29×29pt, works
+       on light & dark wallpaper
+
+Format output:
+  - Tabel metadata per field
+  - Storyboard visual (deskripsi per frame)
+  - Copy text siap-paste untuk setiap field
+
+Batasan:
+  - Semua copy dalam Bahasa Indonesia, tone: optimis & empowering.
+  - JANGAN klaim "terbaik", "no. 1", atau superlatif lain
+    (melanggar App Store guideline).
+  - Screenshot TIDAK boleh menampilkan data finansial realistis
+    (gunakan data dummy yang jelas fiktif: "Rp1.234.567").
+  - Sertakan disclaimer di deskripsi: "HabitWealth bukan
+    lembaga keuangan. Fitur pencatatan keuangan bersifat
+    informatif dan tidak menggantikan saran finansial profesional."
+  - Sertakan age rating recommendation: 17+ (karena akses
+    data finansial) atau 12+ (jika tanpa fitur transfer).
+```
+
+---
+
+### Deliverable C — Final Execution Playbook (Clean & Consolidated)
+
+Ini adalah **satu-satunya dokumen yang perlu dibaca PM** untuk menjalankan seluruh proses. Semua patch dari Ronde 1-3 sudah di-merge ke dalam struktur ini.
+
+```
+═══════════════════════════════════════════════════════════
+HABITWEALTH UX DESIGN SUITE — EXECUTION PLAYBOOK v4.0
+═══════════════════════════════════════════════════════════
+
+LANGKAH 0: SETUP (Hari 1, Pagi)
+─────────────────────────────────
+1. Buka AI tool pilihan (Claude / ChatGPT / Gemini).
+2. Paste SYSTEM PROMPT (Deliverable A) sebagai instruksi pertama.
+3. Tunggu konfirmasi "✅ HabitWealth Design Suite v4.0 loaded."
+4. Buat folder proyek: /HabitWealth-UX/{foundation,core,retention,
+   compliance,handoff,qa}
+
+LANGKAH 1: FOUNDATION (Hari 1-2, Paralel)
+──────────────────────────────────────────
+Jalankan 4 prompt ini secara paralel (bisa di 4 chat terpisah,
+tapi semua harus pakai System Prompt yang sama):
+
+  📐 P2  — IA + Navigasi + MVP Phasing
+     Output: Tree diagram IA, tabel inventaris layar (dengan
+     kolom Tier & MVP Phase), navigasi global spec.
+     Folder: /foundation/
+
+  🎨 P9  — Design System Baseline
+     Output: Color tokens, typography, spacing, component
+     library, elevation, motion, accessibility checklist.
+     Folder: /foundation/
+
+  📊 P10 — Event Tracking Plan
+     Output: Tabel event per kategori (funnel, feature, error,
+     revenue), max 25 event P0.
+     Folder: /foundation/
+
+  🗄️ P13 — Data Model & Entity Schema
+     Output: 8 entity schema, relasi diagram, index
+     recommendation, PII marking.
+     Folder: /foundation/
+
+  ⏸️ CHECKPOINT 1: Review output P2, P9, P10, P13 dengan
+     CTO/Tech Lead. Pastikan IA, design system, event, dan
+     data model konsisten. Revisi jika perlu SEBELUM lanjut.
+
+LANGKAH 2: CORE EXPERIENCE (Hari 3-5, Berurutan)
+──────────────────────────────────────────────────
+Jalankan secara berurutan. Setiap prompt HARUS merujuk output
+Langkah 1 (sebutkan "Berdasarkan IA P2 v1.0..." di awal prompt).
+
+  🗺️ P1  — User Journey Map
+     Output: Tabel journey 3 persona (Rina, Dimas, Budi),
+     8 fase, kolom Channel & API sync marker.
+     Folder: /core/
+
+  🚀 P11 — Progressive Onboarding (Day 1-30)
+     Output: Matriks onboarding, 3 wireframe dashboard
+     (Day 1/7/30), flow diagram unlock trigger.
+     ⚠️ HANDOFF P3↔P11: P11 mendefinisikan APA yang user
+     lihat di Day 1. P3 mendefinisikan BAGAIMANA user
+     masuk (auth). P11 harus merujuk "setelah auth selesai
+     (P3)" sebagai starting point.
+     Folder: /core/
+
+  🔐 P3  — Auth + Consent + Permissions
+     Output: 6 wireframe (carousel, auth hub, passkey,
+     fallback, consent UU PDP, permission primer).
+     Permissions timing: Biometric (Day 1) → Notification
+     (Day 1 post-habit) → Health (Day 3) → Bank (Day 7).
+     Folder: /core/
+
+  ✅ P4  — Habit Tracker
+     Output: 5 wireframe (dashboard, add/edit, integration
+     hub, reminder setup, streak freeze).
+     Termasuk: gesture map, haptic spec, keyboard handling,
+     widget preview, dark mode, empty state templates,
+     pull-to-refresh cooldown.
+     Folder: /core/
+
+  💰 P5  — Money Tracker
+     Output: 6 wireframe (finance dashboard, transaction
+     feed, connect account, budget alert, transaction
+     detail & recategorize, reconnect account).
+     Termasuk: saldo masking + re-auth, AI categorization
+     correction, offline state, token expiry UX, crash
+     recovery, donut chart interaction, format Rp & tanggal.
+     Provider: "open banking aggregator bank Indonesia"
+     (JANGAN sebut Plaid/Nordigen).
+     Folder: /core/
+
+  ⏸️ CHECKPOINT 2: Review output P1-P5 dengan Product Lead
+     & Designer. Fokus: apakah journey map (P1) ter-address
+     di wireframe? Apakah onboarding (P11) tidak overwhelming?
+
+LANGKAH 3: DIFFERENTIATOR & RETENTION (Hari 6-7)
+──────────────────────────────────────────────────
+
+  🔗 P6  — Cross-Feature Synergy
+     Output: 4 wireframe (saving streak setup, celebration,
+     monthly report, withdraw celengan).
+     Termasuk: pending queue mechanism, crash recovery,
+     insufficient balance handling (no error merah),
+     undo toast, disclaimer korelasi ≠ sebab-akibat,
+     celengan = virtual ledger (bukan rekening).
+     Deep link: habitwealth://saving/...
+     Folder: /retention/
+
+  🔔 P7  — Notifikasi & Re-engagement
+     Output: 2 wireframe (preferences, in-app center) +
+     tabel 8 push template dengan deep link & event name.
+     Termasuk: frequency cap (5/hari), quiet hours,
+     timezone-aware, dark mode, analytics events per
+     notification action.
+     Folder: /retention/
+
+  📣 P12 — Growth, Referral & Sharing
+     Output: 3 wireframe (share achievement, referral
+     program, reward claim).
+     Termasuk: share card tanpa data finansial spesifik,
+     referral deep link, rate limit modal, "jangan
+     tampilkan lagi" option.
+     Folder: /retention/
+
+LANGKAH 4: COMPLIANCE & POLISH (Hari 8)
+────────────────────────────────────────
+
+  ⚙️ P8  — Settings, Privacy, Subscription, Legal
+     Output: 7 wireframe (settings hub, data & privacy,
+     delete account, appearance, help & support, about,
+     subscription management).
+     Termasuk: UU PDP Pasal 24 & 32, cooling-off 14 hari,
+     data export (JSON/CSV), re-auth biometrik, third-party
+     data sharing disclosure, cancel via App Store/Play Store
+     (bukan in-app), dark mode, accessibility labels.
+     Folder: /compliance/
+
+LANGKAH 5: LAUNCH PREP (Hari 9)
+────────────────────────────────
+
+  🏪 P15 — App Store & Play Store Listing
+     Output: Metadata, 6-10 screenshot spec, video
+     storyboard, feature graphic, app icon concepts.
+     Termasuk: A/B test variants untuk deskripsi, disclaimer
+     "bukan lembaga keuangan", age rating recommendation.
+     Folder: /handoff/
+
+LANGKAH 6: QA & HANDOFF (Hari 10)
+──────────────────────────────────
+
+  ✅ P14 — QA Acceptance Criteria & Test Scenarios
+     Output: Checklist per prompt (P1-P13), test scenario
+     (Given/When/Then), cross-prompt consistency check,
+     kill criteria, Go/No-Go checklist.
+     Folder: /qa/
+
+  ⏸️ CHECKPOINT 3 (FINAL): Review SEMUA output dengan
+     full team (PM, Designer, Developer, QA, Legal).
+     Gunakan P14 sebagai checklist. Jika semua ✅ → HANDOFF.
+
+═══════════════════════════════════════════════════════════
+TOTAL: 15 Prompt + 1 System Prompt + 3 Checkpoint
+ESTIMASI: 10 hari kerja (1 PM + 1 AI tool)
+OUTPUT: ~80-100 layar wireframe + design system + data model
+        + tracking plan + QA checklist + store listing
+═══════════════════════════════════════════════════════════
+```
+
+---
+
+## 🔀 Resolusi Overlap P3 ↔ P11
+
+Ini gap #52 yang belum ter-address di ronde manapun. Berikut aturan handoff yang jelas:
+
+```
+P3 (Auth) bertanggung jawab atas:
+  ✅ Segala sesuatu SEBELUM user masuk ke dashboard pertama kali
+  ✅ Carousel → Auth Hub → Passkey → Consent → Permission Primer
+  ✅ Output terakhir P3: "User berhasil login, redirect ke P11"
+
+P11 (Onboarding) bertanggung jawab atas:
+  ✅ Segala sesuatu SETELAH auth berhasil
+  ✅ Day 1 simplified dashboard → Day 7 unlock → Day 30 full
+  ✅ Input pertama P11: "User baru saja menyelesaikan auth (P3)"
+
+TITIK HANDOFF:
+  P3 layar terakhir = Permission Primer (setelah consent)
+  P11 layar pertama = Simplified Dashboard (Day 1, post-auth)
+  Trigger: event "auth_completed" (P10) → P11 Fase 1 dimulai
+```
+
+---
+
+## 📊 Cross-Platform Divergence Matrix (Gap #50)
+
+Tambahkan ini sebagai **lampiran wajib** di System Prompt atau di P9:
+
+```
+| Fitur | iOS | Android |
+|-------|-----|---------|
+| Navigasi | Tab Bar (UITabBarController) | Navigation Bar + Bottom Nav (Material 3) |
+| Back gesture | Swipe from left edge | System back button + swipe |
+| Biometrik | Face ID / Touch ID (LocalAuthentication) | Fingerprint / Face (BiometricPrompt) |
+| Permission dialog | Custom primer → system dialog (sekali, tidak bisa re-trigger) | Custom primer → system dialog (bisa re-trigger 2×) |
+| Widget | WidgetKit (SwiftUI, static/timeline) | AppWidget (Glanceable, RemoteViews) |
+| Notifikasi | UNUserNotificationCenter, badge count | NotificationChannel (wajib ≥ Android 8), no badge default |
+| Screenshot block | Tidak bisa block (iOS limitation), tampilkan warning overlay | FLAG_SECURE di Activity |
+| Deep link | Universal Links (habitatwealth:// + https://) | App Links (intent filter + https://) |
+| In-app purchase | StoreKit 2 (subscription auto-renew) | Google Play Billing Library v6 |
+| Dark mode | UITraitCollection.userInterfaceStyle | Configuration.uiMode (follow system) |
+| Haptics | UIImpactFeedbackGenerator, UINotificationFeedbackGenerator | VibrationEffect (API 26+) |
+| Keyboard | IQKeyboardManager / ScrollView auto-adjust | adjustResize di AndroidManifest |
+| Pull-to-refresh | UIRefreshControl | SwipeRefreshLayout |
+| Skeleton | Shimmer (third-party) | ShimmerLayout (Facebook) |
+| Date picker | UIDatePicker (.inline) | MaterialDatePicker |
+```
+
+---
+
+## 📋 Final Scorecard: Ronde 1 → 2 → 3 → 4
+
+| Aspek | R1 | R2 | R3 | R4 |
+|-------|----|----|-----|-----|
+| Istilah teknis akurat | ✅ | ✅ | ✅ | ✅ |
+| Persona & konteks | ✅ | ⚠️ | ✅ | ✅ |
+| Format output eksplisit | ✅ | ✅ | ✅ | ✅ |
+| Edge case (error/empty/offline) | ❌ | ⚠️ | ✅ | ✅ |
+| Aksesibilitas (WCAG) | ❌ | ✅ | ✅ | ✅ +system prompt |
+| Notifikasi & re-engagement | ❌ | ✅ | ✅ | ✅ |
+| UU PDP / Legal compliance | ❌ | ✅ | ✅ | ✅ |
+| Navigasi global | ❌ | ✅ | ✅ | ✅ |
+| Dark mode | ❌ | ✅ | ✅ | ✅ +divergence matrix |
+| Settings & Account Deletion | ❌ | ✅ | ✅ | ✅ |
+| Widget home screen | ❌ | ✅ | ✅ | ✅ |
+| Re-auth biometrik | ❌ | ✅ | ✅ | ✅ +security hardening |
+| Lokalisasi Indonesia | ❌ | ✅ | ✅ | ✅ |
+| Provider open banking lokal | ❌ | ✅ | ✅ | ✅ |
+| Design system | ❌ | ✅ | ✅ | ✅ **Fase 0** |
+| Self-contained + chaining | ⚠️ | ✅ | ✅ | ✅ +system prompt |
+| Monetisasi & Paywall | ❌ | ❌ | ✅ | ✅ |
+| App Permissions timing | ❌ | ❌ | ✅ | ✅ |
+| Event Tracking Plan | ❌ | ❌ | ✅ | ✅ **Fase 0** |
+| Progressive Onboarding | ❌ | ❌ | ✅ | ✅ +P3 handoff |
+| Gesture & Haptics | ❌ | ❌ | ✅ | ✅ |
+| OAuth Token Expiry | ❌ | ❌ | ✅ | ✅ |
+| Crash Recovery | ❌ | ❌ | ✅ | ✅ |
+| Deep Link Architecture | ❌ | ❌ | ✅ | ✅ |
+| MVP Phasing | ❌ | ❌ | ✅ | ✅ |
+| Growth & Referral | ❌ | ❌ | ✅ | ✅ |
+| **System Prompt wrapper** | ❌ | ❌ | ❌ | ✅ **BARU** |
+| **Data Model / Schema** | ❌ | ❌ | ❌ | ✅ **BARU (P13)** |
+| **QA Acceptance Criteria** | ❌ | ❌ | ❌ | ✅ **BARU (P14)** |
+| **App Store Listing** | ❌ | ❌ | ❌ | ✅ **BARU (P15)** |
+| **Cross-Platform Matrix** | ❌ | ❌ | ❌ | ✅ **BARU** |
+| **Security UX Hardening** | ❌ | ❌ | ❌ | ✅ **BARU** |
+| **Performance Budget** | ❌ | ❌ | ❌ | ✅ **BARU** |
+| **P3↔P11 Handoff** | ❌ | ❌ | ❌ | ✅ **BARU** |
+| **Execution Playbook** | ❌ | ❌ | ⚠️ | ✅ **CLEAN** |
+| **Stakeholder Checkpoints** | ❌ | ❌ | ❌ | ✅ **3 checkpoint** |
+| **Total prompt** | 6 | 9 | 12 | **15 + 1 system** |
+| **Total gap teridentifikasi** | 9 | 27 | 45 | **55** |
+| **Output terfragmentasi?** | Ya | Ya | Ya | **TIDAK ✅** |
+
+---
+
+## ⚡ TL;DR — 5 Gap Paling Berbahaya yang Terlewat di Ronde 3
+
+1. **Output terfragmentasi di 3 dokumen** → PM tidak bisa langsung copy-paste, harus merge manual 50+ patch. **Fix: Execution Playbook v4.0 yang clean + System Prompt wrapper.**
+
+2. **Tidak ada data model / entity schema** → Developer mengarang struktur data sendiri yang tidak cocok dengan wireframe. **Fix: Prompt 13 baru (8 entitas, relasi, PII marking, Firebase-compatible).**
+
+3. **Tidak ada QA acceptance criteria** → PM tidak tahu kapan output AI "selesai" dan kapan harus reject. **Fix: Prompt 14 baru (checklist per prompt + kill criteria + Go/No-Go).**
+
+4. **Tidak ada system prompt global** → Setiap prompt berjalan di ruang hampa, AI "lupa" konvensi antar-prompt. **Fix: System Prompt wrapper dengan 10 aturan global yang di-load sekali di awal.**
+
+5. **Tidak ada App Store listing spec** → Launch tertunda karena aset store belum siap. **Fix: Prompt 15 baru (metadata, screenshot, video, icon).**
+
+---
+
+## 🏁 Pernyataan Penutup Ronde 4
+
+Setelah 4 ronde audit, 55 gap teridentifikasi, dan 15 prompt + 1 system prompt + 3 checkpoint + execution playbook:
+
+**Apakah ini sudah 100% end-to-end?**
+
+Jujur: **95%**. Sisa 5% yang tidak bisa di-cover oleh prompt UX adalah:
+
+- **Product strategy** — Apakah HabitWealth harus ada? Apakah market-nya cukup besar? Ini ranah founder, bukan prompt.
+- **Engineering architecture** — Microservice vs monolith? Firebase vs AWS? Ini ranah CTO.
+- **Legal review final** — UU PDP interpretation, OJK licensing untuk open banking. Ini ranah lawyer.
+- **User testing nyata** — Prompt menghasilkan *hipotesis* desain. Validasi sesungguhnya hanya bisa dari usability testing dengan manusia nyata.
+- **Post-launch iteration** — Prompt ini berhenti di Day 1 launch. Setelah itu, data analytics (P10) yang harus men-drive iterasi.
+
+Tapi untuk **scope UX design prompt yang bisa di-copy-paste ke AI dan menghasilkan output yang langsung bisa di-review oleh tim produk** — ini sudah se-end-to-end yang bisa dicapai. 🎯

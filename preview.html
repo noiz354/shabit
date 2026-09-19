@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Samsung One UI Design System -- Light Mode Preview</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --primary: #0381FE;
+    --primary-dark: #0072DE;
+    --control-activated: #3E91FF;
+    --background: #FFFFFF;
+    --surface: #F6F6F6;
+    --surface-variant: #EEEEEE;
+    --surface-elevated: #FFFFFF;
+    --scrim: rgba(0, 0, 0, 0.32);
+    --on-background: #000000;
+    --on-background-secondary: #666666;
+    --on-background-tertiary: #999999;
+    --on-primary: #FFFFFF;
+    --on-surface: #000000;
+    --icon-default: #252525;
+    --icon-secondary: #8C8C8C;
+    --positive: #0AA64E;
+    --negative: #D93B30;
+    --warning: #E89500;
+    --informative: #0072DE;
+    --notification-badge: #FF2D2D;
+    --samsung-blue: #1428A0;
+    --galaxy-blue: #2196F3;
+    --divider: #E0E0E0;
+    --btn-medium-bg: #E0E0E0;
+    --btn-medium-text: #000000;
+    --switch-inactive: #CCCCCC;
+  }
+
+  body {
+    font-family: -apple-system, 'Helvetica Neue', sans-serif;
+    background: var(--background);
+    color: var(--on-background);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 48px 24px;
+  }
+
+  .page-title {
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+
+  .page-subtitle {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--on-background-secondary);
+    margin-bottom: 48px;
+  }
+
+  .section {
+    margin-bottom: 64px;
+  }
+
+  .section-title {
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 1.25;
+    letter-spacing: -0.2px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--divider);
+  }
+
+  .subsection-title {
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.3;
+    margin-bottom: 16px;
+    margin-top: 32px;
+  }
+
+  /* Color Swatches */
+  .color-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .color-swatch {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--divider);
+  }
+
+  .color-swatch-block {
+    height: 72px;
+    display: flex;
+    align-items: flex-end;
+    padding: 8px 12px;
+  }
+
+  .color-swatch-block span {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.85);
+    color: #000;
+  }
+
+  .color-swatch-block.dark-text span {
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+  }
+
+  .color-swatch-info {
+    padding: 10px 12px;
+    background: var(--surface);
+  }
+
+  .color-swatch-name {
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+
+  .color-swatch-token {
+    font-size: 10px;
+    color: var(--on-background-secondary);
+  }
+
+  /* Typography */
+  .type-sample {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--divider);
+  }
+
+  .type-sample:last-child { border-bottom: none; }
+
+  .type-meta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+
+  .type-meta span {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--on-background-tertiary);
+    background: var(--surface);
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+  }
+
+  /* Components */
+  .component-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 48px;
+    padding: 12px 16px;
+    border-radius: 18px;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    font-family: inherit;
+  }
+
+  .btn:hover { opacity: 0.88; }
+
+  .btn-contained {
+    background: var(--primary-dark);
+    color: var(--on-primary);
+  }
+
+  .btn-medium {
+    background: var(--btn-medium-bg);
+    color: var(--btn-medium-text);
+  }
+
+  .btn-flat {
+    background: transparent;
+    color: var(--primary);
+  }
+
+  .btn-disabled {
+    background: var(--primary-dark);
+    color: var(--on-primary);
+    opacity: 0.38;
+    pointer-events: none;
+  }
+
+  .fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: var(--primary);
+    color: var(--on-primary);
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: rgba(0, 0, 0, 0.15) 0px 3px 8px;
+    font-size: 24px;
+    line-height: 1;
+  }
+
+  /* Cards */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 16px;
+  }
+
+  .card-image {
+    width: 100%;
+    height: 140px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--on-background-secondary);
+  }
+
+  .card-title {
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+
+  .card-desc {
+    font-size: 14px;
+    color: var(--on-background-secondary);
+    line-height: 1.45;
+  }
+
+  /* Inputs / Search */
+  .input-search {
+    display: flex;
+    align-items: center;
+    height: 48px;
+    border-radius: 24px;
+    background: var(--surface-variant);
+    padding: 0 16px;
+    gap: 10px;
+    max-width: 480px;
+    margin-bottom: 16px;
+  }
+
+  .input-search svg { flex-shrink: 0; color: var(--icon-secondary); }
+  .input-search span { font-size: 16px; color: var(--on-background-tertiary); }
+
+  /* List */
+  .list-container {
+    background: var(--surface);
+    border-radius: 16px;
+    overflow: hidden;
+    max-width: 480px;
+    margin-bottom: 24px;
+  }
+
+  .list-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    padding: 0 24px;
+    border-bottom: 1px solid var(--divider);
+  }
+
+  .list-row:last-child { border-bottom: none; }
+
+  .list-row-text {
+    font-size: 16px;
+    font-weight: 400;
+  }
+
+  .list-row-sub {
+    font-size: 14px;
+    color: var(--on-background-secondary);
+  }
+
+  /* Switch */
+  .switch {
+    position: relative;
+    width: 52px;
+    height: 32px;
+    border-radius: 16px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .switch-on {
+    background: var(--control-activated);
+  }
+
+  .switch-off {
+    background: var(--switch-inactive);
+  }
+
+  .switch-thumb {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-radius: 14px;
+    background: #fff;
+    top: 2px;
+    transition: left 0.15s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+
+  .switch-on .switch-thumb { left: 22px; }
+  .switch-off .switch-thumb { left: 2px; }
+
+  /* Toast */
+  .toast-demo {
+    display: inline-flex;
+    align-items: center;
+    height: 44px;
+    padding: 0 24px;
+    border-radius: 24px;
+    background: #323232;
+    color: #FFFFFF;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  /* Dialog */
+  .dialog-demo {
+    border-radius: 26px;
+    background: var(--surface-elevated);
+    padding: 24px;
+    max-width: 360px;
+    box-shadow: rgba(0,0,0,0.15) 0px 3px 8px;
+    margin-bottom: 24px;
+  }
+
+  .dialog-demo-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .dialog-demo-body {
+    font-size: 14px;
+    color: var(--on-background-secondary);
+    margin-bottom: 20px;
+    line-height: 1.45;
+  }
+
+  .dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+
+  .dialog-actions .btn { height: 40px; padding: 8px 16px; }
+
+  /* Spacing */
+  .spacing-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .spacing-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .spacing-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--on-background-secondary);
+    width: 80px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .spacing-bar {
+    height: 28px;
+    border-radius: 6px;
+    background: var(--primary);
+    opacity: 0.18;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+  }
+
+  .spacing-bar span {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--primary-dark);
+  }
+
+  /* Elevation */
+  .elevation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .elevation-box {
+    height: 100px;
+    border-radius: 16px;
+    background: var(--background);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .elevation-box .elev-label {
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .elevation-box .elev-detail {
+    font-size: 10px;
+    color: var(--on-background-secondary);
+  }
+
+  /* Radius */
+  .radius-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+    margin-bottom: 24px;
+  }
+
+  .radius-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .radius-box {
+    width: 64px;
+    height: 64px;
+    background: var(--surface);
+    border: 2px solid var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--primary-dark);
+  }
+
+  .radius-name {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--on-background-secondary);
+    text-align: center;
+  }
+
+  /* App bar demo */
+  .appbar-demo {
+    display: flex;
+    align-items: center;
+    height: 56px;
+    padding: 0 16px;
+    background: var(--surface);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    max-width: 480px;
+    gap: 12px;
+  }
+
+  .appbar-demo svg { color: var(--icon-default); flex-shrink: 0; }
+  .appbar-demo .appbar-title { font-size: 18px; font-weight: 500; flex: 1; }
+  .appbar-demo .appbar-spacer { flex: 1; }
+
+  /* Bottom nav demo */
+  .bottomnav-demo {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    height: 56px;
+    background: var(--surface);
+    border-radius: 12px;
+    max-width: 480px;
+    margin-bottom: 24px;
+  }
+
+  .bottomnav-item {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--on-background-secondary);
+    cursor: pointer;
+  }
+
+  .bottomnav-item.active { color: var(--primary); }
+
+  /* Notification badge */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    background: var(--notification-badge);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 0 6px;
+  }
+
+  @media (max-width: 600px) {
+    .color-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+    .card-grid { grid-template-columns: 1fr; }
+    .elevation-grid { grid-template-columns: repeat(2, 1fr); }
+    .page { padding: 24px 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <h1 class="page-title">Samsung One UI Design System</h1>
+  <p class="page-subtitle">Visual token catalog -- Light Mode</p>
+
+  <!-- ============================================ -->
+  <!-- SECTION 2: COLOR PALETTE -->
+  <!-- ============================================ -->
+  <div class="section">
+    <h2 class="section-title">Color Palette</h2>
+
+    <h3 class="subsection-title">Primary Accent</h3>
+    <div class="color-grid">
+      <div class="color-swatch">
+        <div class="color-swatch-block dark-text" style="background:#0381FE"><span>#0381FE</span></div>
+        <div class="color-swatch-info"><div class="color-swatch-name">Primary</div><div class="color-swatch-token">FABs, sliders, primary interactive</div></div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block dark-text" style="background:#0072DE"><span>#0072DE</span></div>
+        <div class="color-swatch-info"><div class="color-swatch-name">Primary Dark</div><div class="color-swatch-token">Contained buttons, highlights</div></div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block dark-text" style="background:#3E91FF"><span>#3E91FF</span></div>
+        <div class="color-swatch-info"><div class="color-swatch-name">Control Activated</div><div class="color-swatch-token">Toggles, checkboxes, switches</div></div>
+      </div>
+    </div>
+
+    <h3 class="subsection-title">Background &amp; Surface</h3>
+    <div class="color-grid">
+      <div class="color-swatch">
+        <div class="color-swatch-block" style="background:#FFFFFF;border:1px solid #eee"><span>#FFFFFF</span></div>
+        <div class="color-swatch-info"><div class="color-swatch-name">Background</div><div class="color-swatch-token">Primary app background</div></div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block" style="background:#F6F6F6"><span>#F6F6F6</span></div>
+        <div class="color-swatch-info"><div class="color-swatch-name">Surface</div><div class="color-swatch-token">Cards, focus blocks</div></div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block" style="background:#EEEEEE"><span>#EEEEEE</span></div>
+        <div class="color-swatch-info"><div class="color-swatch-name">Surface Variant</div><div class="color-swatch-token">Secondary cards, grouped lists</div></div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block" style="background:#FFFFFF;border:1px solid #eee"><span>#FFFFFF</span></div>
+        <div class="color-swatch-info"><div class="color-swatch-name">Surface Elevated</div><div class="color-swatch-token">Dialogs, bottom sheets</div></div>
+      </div>
+    </div>
+
+    <h3 class="subsection-title">Text &amp; Icon</h3>
+    <div class="color-grid">
+      <div class="color-swatch">
+        <div class="color-swatch-block dark-text" style="background:#000000"><span>#000000</span></div>
+        <div class="color-swatch-info"><div class="color-swatch-name">On Background</div><div class="color-swatch-token">Primary text</div></div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block dark-text" style="background:#666666"><span>#666666</span></div>
+        <div class="color-swatch-info"><div class="color-swatch-name">On Background Secondary</div><div class="color-swatch-token">Supporting text</div></div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block dark-text" style="background:#999999"><span>#999999</span></div>
+        <div class="color-swatch-info"><div class="color-swatch-name">On Background Tertiary</div><div class="color-swatch-token">Hints, placeholders</div></div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block dark-text" style="background:#252525"><span>#252525</span></div>
+        <div class="color-swatch-info"><div class="color-swatch-name">Icon Default</div><div class="color-swatch-token">Standard icon tint</div></div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block dark-text" style="background:#8C8C8C"><span>#8C8C8C</span></div>
+        <div class="color-swatch-info"><div class="color-swatch-name">Icon Secondary</div><div class="color-swatch-token">Inactive icon tint</div></div>
+      </div>
+    </div>
+
+    <h3 class="subsection-title">Semantic / Informative</h3>
+    <div class="color-grid">
+      <div class="color-swatch">
+        <div class="color-swatch-block dark-text" style="background:#0AA64E"><span>#0AA64E</span></div>
+        <div class="color-swatch-info"><div class="color-swatch-name">Positive / Accept</div><div class="color-swatch-token">Success, confirmations</div></div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block dark-text" style="background:#D93B30"><span>#D93B30</span></div>
+        <div class="color-swatch-info"><div class="color-swatch-name">Negative / Reject</div><div class="color-swatch-token">Errors, destructive actions</div></div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block dark-text" style="background:#E89500"><span>#E89500</span></div>
+        <div class="color-swatch-info"><div class="color-swatch-name">Warning</div><div class="color-swatch-token">Caution states</div></div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block dark-text" style="background:#0072DE"><span>#0072DE</span></div>
+        <div class="color-swatch-info"><div class="color-swatch-name">Informative</div><div class="color-swatch-token">Info banners, tips</div></div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block dark-text" style="background:#FF2D2D"><span>#FF2D2D</span></div>
+        <div class="color-swatch-info"><div class="color-swatch-name">Notification Badge</div><div class="color-swatch-token">Unread count badges</div></div>
+      </div>
+    </div>
+
+    <h3 class="subsection-title">Samsung Brand</h3>
+    <div class="color-grid">
+      <div class="color-swatch">
+        <div class="color-swatch-block dark-text" style="background:#1428A0"><span>#1428A0</span></div>
+        <div class="color-swatch-info"><div class="color-swatch-name">Samsung Blue</div><div class="color-swatch-token">Corporate brand mark</div></div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block dark-text" style="background:#0381FE"><span>#0381FE</span></div>
+        <div class="color-swatch-info"><div class="color-swatch-name">One UI Blue</div><div class="color-swatch-token">System accent</div></div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block dark-text" style="background:#2196F3"><span>#2196F3</span></div>
+        <div class="color-swatch-info"><div class="color-swatch-name">Galaxy Blue</div><div class="color-swatch-token">Ecosystem marketing</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SECTION 3: TYPOGRAPHY -->
+  <!-- ============================================ -->
+  <div class="section">
+    <h2 class="section-title">Typography Hierarchy</h2>
+
+    <div class="type-sample">
+      <div style="font-size:34px;font-weight:700;line-height:1.15;letter-spacing:-0.5px">Display Hero</div>
+      <div class="type-meta">
+        <span>34sp</span><span>Bold 700</span><span>LH 1.15</span><span>LS -0.5px</span><span>SS Head</span>
+      </div>
+    </div>
+
+    <div class="type-sample">
+      <div style="font-size:28px;font-weight:700;line-height:1.20;letter-spacing:-0.3px">Page Title</div>
+      <div class="type-meta">
+        <span>28sp</span><span>Bold 700</span><span>LH 1.20</span><span>LS -0.3px</span><span>SS Head</span>
+      </div>
+    </div>
+
+    <div class="type-sample">
+      <div style="font-size:22px;font-weight:500;line-height:1.25;letter-spacing:-0.2px">Section Title</div>
+      <div class="type-meta">
+        <span>22sp</span><span>Medium 500</span><span>LH 1.25</span><span>LS -0.2px</span><span>SS Head</span>
+      </div>
+    </div>
+
+    <div class="type-sample">
+      <div style="font-size:18px;font-weight:500;line-height:1.30">Card Title</div>
+      <div class="type-meta">
+        <span>18sp</span><span>Medium 500</span><span>LH 1.30</span><span>LS normal</span><span>SS Head</span>
+      </div>
+    </div>
+
+    <div class="type-sample">
+      <div style="font-size:16px;font-weight:700;line-height:1.35">Subtitle</div>
+      <div class="type-meta">
+        <span>16sp</span><span>Bold 700</span><span>LH 1.35</span><span>LS normal</span><span>SS Body</span>
+      </div>
+    </div>
+
+    <div class="type-sample">
+      <div style="font-size:16px;font-weight:400;line-height:1.50">Body 1 -- Primary reading text with comfortable line height for extended content.</div>
+      <div class="type-meta">
+        <span>16sp</span><span>Regular 400</span><span>LH 1.50</span><span>LS normal</span><span>SS Body</span>
+      </div>
+    </div>
+
+    <div class="type-sample">
+      <div style="font-size:14px;font-weight:400;line-height:1.45;letter-spacing:0.1px;color:var(--on-background-secondary)">Body 2 -- Secondary text, descriptions, and supplementary information.</div>
+      <div class="type-meta">
+        <span>14sp</span><span>Regular 400</span><span>LH 1.45</span><span>LS 0.1px</span><span>SS Body</span>
+      </div>
+    </div>
+
+    <div class="type-sample">
+      <div style="font-size:12px;font-weight:400;line-height:1.35;letter-spacing:0.2px;color:var(--on-background-secondary)">Caption -- Timestamps, metadata, helper text</div>
+      <div class="type-meta">
+        <span>12sp</span><span>Regular 400</span><span>LH 1.35</span><span>LS 0.2px</span><span>SS Body</span>
+      </div>
+    </div>
+
+    <div class="type-sample">
+      <div style="font-size:11px;font-weight:500;line-height:1.30;letter-spacing:0.5px;text-transform:uppercase;color:var(--on-background-secondary)">Overline -- Category labels</div>
+      <div class="type-meta">
+        <span>11sp</span><span>Medium 500</span><span>LH 1.30</span><span>LS 0.5px</span><span>UPPERCASE</span><span>SS Body</span>
+      </div>
+    </div>
+
+    <div class="type-sample">
+      <div style="font-size:14px;font-weight:500;line-height:1.00;letter-spacing:0.2px;color:var(--primary)">Button Label</div>
+      <div class="type-meta">
+        <span>14sp</span><span>Medium 500</span><span>LH 1.00</span><span>LS 0.2px</span><span>SS Body</span>
+      </div>
+    </div>
+
+    <div class="type-sample">
+      <div style="font-size:10px;font-weight:400;line-height:1.30;letter-spacing:0.3px;color:var(--on-background-tertiary)">Micro -- Legal text, badge counts, fine print</div>
+      <div class="type-meta">
+        <span>10sp</span><span>Regular 400</span><span>LH 1.30</span><span>LS 0.3px</span><span>SS Body</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SECTION 4: COMPONENTS -->
+  <!-- ============================================ -->
+  <div class="section">
+    <h2 class="section-title">Components</h2>
+
+    <!-- Buttons -->
+    <h3 class="subsection-title">Buttons</h3>
+    <div class="component-row">
+      <button class="btn btn-contained">Contained (High)</button>
+      <button class="btn btn-medium">Contained (Medium)</button>
+      <button class="btn btn-flat">Flat (Low)</button>
+      <button class="btn btn-disabled">Disabled</button>
+      <button class="fab" aria-label="Add">+</button>
+    </div>
+    <div style="font-size:12px;color:var(--on-background-secondary);margin-bottom:32px">
+      Height: 48dp &bull; Radius: 18dp &bull; Font: 14sp Medium 500 &bull; FAB: 56dp, radius 16dp
+    </div>
+
+    <!-- App Bar -->
+    <h3 class="subsection-title">App Bar (Standard)</h3>
+    <div class="appbar-demo">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      <span class="appbar-title">Settings</span>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+    </div>
+    <div style="font-size:12px;color:var(--on-background-secondary);margin-bottom:32px">
+      Height: 56dp &bull; Title: 18sp Medium 500 &bull; Icons: 24dp &bull; Max 3 action icons
+    </div>
+
+    <!-- Bottom Navigation -->
+    <h3 class="subsection-title">Bottom Navigation</h3>
+    <div class="bottomnav-demo">
+      <span class="bottomnav-item active">Home</span>
+      <span class="bottomnav-item">Search</span>
+      <span class="bottomnav-item">Library</span>
+      <span class="bottomnav-item">Settings</span>
+    </div>
+    <div style="font-size:12px;color:var(--on-background-secondary);margin-bottom:32px">
+      Height: 56dp &bull; Text-only labels &bull; 12sp Medium 500 &bull; Max 5 items &bull; No swipe
+    </div>
+
+    <!-- Search -->
+    <h3 class="subsection-title">Search Bar</h3>
+    <div class="input-search">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <span>Search settings</span>
+    </div>
+    <div style="font-size:12px;color:var(--on-background-secondary);margin-bottom:32px">
+      Height: 48dp &bull; Radius: 24dp (pill) &bull; Background: Surface Variant
+    </div>
+
+    <!-- Cards -->
+    <h3 class="subsection-title">Cards</h3>
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-image" style="background:linear-gradient(135deg, #0381FE 0%, #3E91FF 100%)">
+          <span style="color:#fff">Image Area</span>
+        </div>
+        <div class="card-title">Galaxy Features</div>
+        <div class="card-desc">Discover the latest One UI features designed for your Galaxy device.</div>
+      </div>
+      <div class="card">
+        <div class="card-image" style="background:linear-gradient(135deg, #0072DE 0%, #2196F3 100%)">
+          <span style="color:#fff">Image Area</span>
+        </div>
+        <div class="card-title">Tips and Tricks</div>
+        <div class="card-desc">Helpful shortcuts and gestures to get the most from your phone.</div>
+      </div>
+      <div class="card">
+        <div class="card-image" style="background: var(--surface-variant)">Thumbnail</div>
+        <div class="card-title">Text-Only Card</div>
+        <div class="card-desc">A simple content card with no decorative imagery. Radius: 16dp, padding: 16dp.</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--on-background-secondary);margin-bottom:32px">
+      Background: Surface (#F6F6F6) &bull; Radius: 16dp &bull; Padding: 16dp &bull; Elevation: 0dp (flat)
+    </div>
+
+    <!-- List -->
+    <h3 class="subsection-title">List Rows</h3>
+    <div class="list-container">
+      <div class="list-row">
+        <div>
+          <div class="list-row-text">Wi-Fi</div>
+        </div>
+        <div class="switch switch-on"><div class="switch-thumb"></div></div>
+      </div>
+      <div class="list-row">
+        <div>
+          <div class="list-row-text">Bluetooth</div>
+        </div>
+        <div class="switch switch-off"><div class="switch-thumb"></div></div>
+      </div>
+      <div class="list-row">
+        <div>
+          <div class="list-row-text">Airplane mode</div>
+        </div>
+        <div class="switch switch-off"><div class="switch-thumb"></div></div>
+      </div>
+      <div class="list-row">
+        <div>
+          <div class="list-row-text">Notifications</div>
+          <div class="list-row-sub">All apps</div>
+        </div>
+        <span class="badge">5</span>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--on-background-secondary);margin-bottom:32px">
+      Row height: 56dp &bull; Padding: 24dp horizontal &bull; Switch: 52x32dp, thumb 28dp &bull; Active: #3E91FF
+    </div>
+
+    <!-- Dialog -->
+    <h3 class="subsection-title">Dialog</h3>
+    <div class="dialog-demo">
+      <div class="dialog-demo-title">Delete file?</div>
+      <div class="dialog-demo-body">This action cannot be undone. The file will be permanently removed from your device.</div>
+      <div class="dialog-actions">
+        <button class="btn btn-flat" style="color:var(--on-background-secondary)">Cancel</button>
+        <button class="btn btn-flat">Confirm</button>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--on-background-secondary);margin-bottom:32px">
+      Radius: 26dp &bull; Padding: 24dp &bull; Title: 18sp Bold 700 &bull; Body: 14sp Regular &bull; Flat button actions
+    </div>
+
+    <!-- Toast -->
+    <h3 class="subsection-title">Toast</h3>
+    <div class="toast-demo">File saved successfully</div>
+    <div style="font-size:12px;color:var(--on-background-secondary);margin-bottom:32px">
+      Radius: 24dp &bull; Background: #323232 &bull; Text: #FFFFFF, 14sp &bull; Max 3 lines
+    </div>
+
+    <!-- Switches -->
+    <h3 class="subsection-title">Switches &amp; Toggles</h3>
+    <div class="component-row" style="margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="switch switch-on"><div class="switch-thumb"></div></div>
+        <span style="font-size:14px">Active</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="switch switch-off"><div class="switch-thumb"></div></div>
+        <span style="font-size:14px">Inactive</span>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--on-background-secondary);margin-bottom:32px">
+      Track: 52x32dp &bull; Thumb: 28dp &bull; On: #3E91FF &bull; Off: #CCCCCC &bull; Radius: 16dp (pill)
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SECTION 5: SPACING -->
+  <!-- ============================================ -->
+  <div class="section">
+    <h2 class="section-title">Spacing Scale</h2>
+    <div class="spacing-grid">
+      <div class="spacing-row">
+        <div class="spacing-label">space-2 (2dp)</div>
+        <div class="spacing-bar" style="width:8px"><span></span></div>
+      </div>
+      <div class="spacing-row">
+        <div class="spacing-label">space-4 (4dp)</div>
+        <div class="spacing-bar" style="width:16px"><span></span></div>
+      </div>
+      <div class="spacing-row">
+        <div class="spacing-label">space-8 (8dp)</div>
+        <div class="spacing-bar" style="width:32px"><span></span></div>
+      </div>
+      <div class="spacing-row">
+        <div class="spacing-label">space-12 (12dp)</div>
+        <div class="spacing-bar" style="width:48px"><span></span></div>
+      </div>
+      <div class="spacing-row">
+        <div class="spacing-label">space-16 (16dp)</div>
+        <div class="spacing-bar" style="width:64px"><span></span></div>
+      </div>
+      <div class="spacing-row">
+        <div class="spacing-label">space-20 (20dp)</div>
+        <div class="spacing-bar" style="width:80px"><span></span></div>
+      </div>
+      <div class="spacing-row">
+        <div class="spacing-label">space-24 (24dp)</div>
+        <div class="spacing-bar" style="width:96px"><span></span></div>
+      </div>
+      <div class="spacing-row">
+        <div class="spacing-label">space-32 (32dp)</div>
+        <div class="spacing-bar" style="width:128px"><span></span></div>
+      </div>
+      <div class="spacing-row">
+        <div class="spacing-label">space-48 (48dp)</div>
+        <div class="spacing-bar" style="width:192px"><span></span></div>
+      </div>
+      <div class="spacing-row">
+        <div class="spacing-label">space-64 (64dp)</div>
+        <div class="spacing-bar" style="width:256px"><span></span></div>
+      </div>
+    </div>
+
+    <h3 class="subsection-title">Border Radius Scale</h3>
+    <div class="radius-grid">
+      <div class="radius-item">
+        <div class="radius-box" style="border-radius:8px">8dp</div>
+        <div class="radius-name">radius-sm<br>Tags</div>
+      </div>
+      <div class="radius-item">
+        <div class="radius-box" style="border-radius:12px">12dp</div>
+        <div class="radius-name">radius-md<br>Medium cards</div>
+      </div>
+      <div class="radius-item">
+        <div class="radius-box" style="border-radius:16px">16dp</div>
+        <div class="radius-name">radius-lg<br>Cards, FAB</div>
+      </div>
+      <div class="radius-item">
+        <div class="radius-box" style="border-radius:18px">18dp</div>
+        <div class="radius-name">radius-xl<br>Buttons</div>
+      </div>
+      <div class="radius-item">
+        <div class="radius-box" style="border-radius:24px">24dp</div>
+        <div class="radius-name">radius-2xl<br>Search, toast</div>
+      </div>
+      <div class="radius-item">
+        <div class="radius-box" style="border-radius:26px">26dp</div>
+        <div class="radius-name">radius-3xl<br>Dialogs</div>
+      </div>
+      <div class="radius-item">
+        <div class="radius-box" style="border-radius:50%">50%</div>
+        <div class="radius-name">radius-full<br>Avatars</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SECTION 6: ELEVATION -->
+  <!-- ============================================ -->
+  <div class="section">
+    <h2 class="section-title">Depth &amp; Elevation</h2>
+    <div class="elevation-grid">
+      <div class="elevation-box" style="border:1px solid var(--divider)">
+        <span class="elev-label">Level 0 -- Ground</span>
+        <span class="elev-detail">0dp, no shadow</span>
+      </div>
+      <div class="elevation-box" style="background:var(--surface)">
+        <span class="elev-label">Level 1 -- Surface</span>
+        <span class="elev-detail">1dp, color shift</span>
+      </div>
+      <div class="elevation-box" style="box-shadow:rgba(0,0,0,0.08) 0px 2px 6px">
+        <span class="elev-label">Level 2 -- Raised</span>
+        <span class="elev-detail">4dp, soft shadow</span>
+      </div>
+      <div class="elevation-box" style="box-shadow:rgba(0,0,0,0.15) 0px 3px 8px">
+        <span class="elev-label">Level 3 -- Floating</span>
+        <span class="elev-detail">6dp, medium shadow</span>
+      </div>
+      <div class="elevation-box" style="box-shadow:rgba(0,0,0,0.15) 0px 3px 8px, rgba(0,0,0,0.06) 0px 8px 24px">
+        <span class="elev-label">Level 4 -- Overlay</span>
+        <span class="elev-detail">8dp, shadow + scrim</span>
+      </div>
+      <div class="elevation-box" style="box-shadow:rgba(0,0,0,0.18) 0px 6px 16px, rgba(0,0,0,0.08) 0px 12px 32px">
+        <span class="elev-label">Level 5 -- Modal</span>
+        <span class="elev-detail">12dp, shadow + full scrim</span>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--on-background-secondary)">
+      One UI prefers background color differentiation and blur over shadow for depth. Shadows are soft, singular, and never 3D-looking.
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
