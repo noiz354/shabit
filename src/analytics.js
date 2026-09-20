@@ -46,6 +46,9 @@ const ALLOWED_EVENTS = new Set([
   "goal_withdrawn",
   "celebration_shared",
   "celebration_dismissed",
+  // spec 15 PWA (ditemukan guardrail T13: dipakai pwa.js tetapi belum di allowlist → sebelumnya di-drop diam-diam)
+  "pwa_installed",
+  "pwa_dismissed",
 ]);
 
 const MAX_QUEUE = 100;

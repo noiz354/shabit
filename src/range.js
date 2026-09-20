@@ -5,8 +5,7 @@
  */
 
 import { getRange, setRange } from "./storage/prefs.js";
-import { makeSheetDraggable } from "./gestures.js";
-import { trapFocus } from "./motion.js";
+import { openSheet } from "./ui.js";
 import { track } from "./analytics.js";
 
 const PRESETS = [
@@ -32,123 +31,155 @@ export function formatRangeLabel(range) {
   return range.preset || "";
 }
 
+function dayCount(from, to) {
+  return Math.round((new Date(to) - new Date(from)) / (1000 * 60 * 60 * 24)) + 1;
+}
+
+function monthSpan(from, to) {
+  const a = new Date(from);
+  const b = new Date(to);
+  return (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
+}
+
+/**
+ * Validasi rentang kustom (spec 17). Dipakai sheet + tes.
+ * @returns {{ok:true}|{ok:false, reason:string, message:string}}
+ */
+export function validateCustomRange(from, to) {
+  if (!from || !to) return { ok: false, reason: "INCOMPLETE", message: "Pilih tanggal dari dan sampai." };
+  if (from > to) return { ok: false, reason: "ORDER", message: "Tanggal dari harus ≤ sampai." };
+  if (monthSpan(from, to) > 12) return { ok: false, reason: "TOO_LONG", message: "Maksimal 12 bulan." }; // OPEN spec 17
+  return { ok: true };
+}
+
+function updateHashWithRange(range) {
+  const current = location.hash.split("?")[0] || "#/beranda";
+  const qs = new URLSearchParams(location.hash.split("?")[1] || "");
+  qs.set("preset", range.preset);
+  qs.set("from", range.from);
+  qs.set("to", range.to);
+  location.hash = `${current}?${qs.toString()}`;
+}
+
+/**
+ * Sheet pemilih rentang (token-only via ui.js openSheet; tanpa dialog sistem — error tampil inline role=alert).
+ * @returns {{close:Function}|null}
+ */
 export function showRangePicker(currentRange, onApply) {
-  const existing = document.getElementById("range-picker-sheet");
-  if (existing) existing.remove();
-  document.getElementById("range-picker-scrim")?.remove();
+  const tz = (currentRange && currentRange.tz) || "Asia/Jakarta";
+  let fromInput, toInput, errEl;
 
-  const scrim = document.createElement("div");
-  scrim.id = "range-picker-scrim";
-  scrim.className = "scrim";
-
-  const sheet = document.createElement("div");
-  sheet.id = "range-picker-sheet";
-  sheet.className = "pwa-sheet sheet-bottom";
-  sheet.setAttribute("role", "dialog");
-  sheet.setAttribute("aria-modal", "true");
-  sheet.setAttribute("aria-label", "Pilih rentang tanggal");
-
-  const presetsHTML = PRESETS.map((p) => {
-    const active = currentRange.preset === p.key ? " aria-current='true' style='background:#0381FE;color:#fff'" : "";
-    return `<button class="btn btn-secondary btn-small" data-preset="${p.key}"${active}>${p.label}</button>`;
-  }).join("");
-
-  sheet.innerHTML = `
-    <div class="sheet-content">
-      <div class="sheet-handle"></div>
-      <h2 class="sheet-title">Rentang tanggal</h2>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">${presetsHTML}</div>
-      <div style="display:flex;gap:12px;margin-bottom:16px">
-        <div style="flex:1"><label style="font-size:12px">Dari</label><input type="date" id="range-from" value="${currentRange.from || ""}" style="width:100%;height:48px;border-radius:12px;border:1px solid #E0E0E0;padding:0 12px" /></div>
-        <div style="flex:1"><label style="font-size:12px">Sampai</label><input type="date" id="range-to" value="${currentRange.to || ""}" style="width:100%;height:48px;border-radius:12px;border:1px solid #E0E0E0;padding:0 12px" /></div>
-      </div>
-      <div style="display:flex;gap:12px;justify-content:flex-end">
-        <button class="btn btn-secondary" data-action="reset">Atur ulang</button>
-        <button class="btn btn-primary" data-action="apply">Terapkan</button>
-      </div>
-      <p style="font-size:11px;color:#999;margin-top:12px">Zona waktu: ${currentRange.tz || "Asia/Jakarta"}</p>
-    </div>
-  `;
-
-  document.body.append(scrim, sheet);
-  sheet.classList.add("open");
-
-  const cleanupFocus = trapFocus(sheet);
-
-  function close() {
-    cleanupFocus();
-    sheet.classList.add("exiting");
-    scrim.style.opacity = "0";
-    setTimeout(() => { sheet.remove(); scrim.remove(); }, 250);
+  function setError(msg) {
+    errEl.textContent = msg ? `⚠️ ${msg}` : "";
+    errEl.hidden = !msg;
+    fromInput.setAttribute("aria-invalid", msg ? "true" : "false");
+    toInput.setAttribute("aria-invalid", msg ? "true" : "false");
   }
 
-  scrim.addEventListener("click", close);
-
-  sheet.querySelectorAll("[data-preset]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const key = btn.dataset.preset;
-      const preset = PRESETS.find((p) => p.key === key);
-      if (preset) {
-        const range = { ...preset.getRange(), tz: currentRange.tz || "Asia/Jakarta" };
-        setRange(range);
-        track("range_changed", { preset: key, days: range.from && range.to ? Math.round((new Date(range.to) - new Date(range.from))/(1000*60*60*24))+1 : 0, module: location.hash }).catch(()=>{});
-        if (onApply) onApply(range);
-        close();
-        // Update URL hash
-        const { buildHash, parseHash } = (() => { try { return require("./router.js"); } catch { return {}; } })();
-        // Fallback: manually update hash
-        const current = location.hash.split("?")[0];
-        const qs = new URLSearchParams(location.hash.split("?")[1] || "");
-        qs.set("preset", range.preset);
-        qs.set("from", range.from);
-        qs.set("to", range.to);
-        location.hash = `${current}?${qs.toString()}`;
-      }
-    });
-  });
-
-  sheet.querySelector('[data-action="reset"]')?.addEventListener("click", () => {
-    const def = PRESETS.find((p) => p.key === "month").getRange();
-    document.getElementById("range-from").value = def.from;
-    document.getElementById("range-to").value = def.to;
-  });
-
-  sheet.querySelector('[data-action="apply"]')?.addEventListener("click", () => {
-    const from = document.getElementById("range-from").value;
-    const to = document.getElementById("range-to").value;
-
-    if (!from || !to) {
-      alert("Pilih tanggal dari dan sampai");
-      return;
-    }
-    if (from > to) {
-      alert("Tanggal dari harus ≤ sampai");
-      return;
-    }
-    // Max 12 months OPEN per spec 17
-    const diffMonths = (new Date(to).getFullYear() - new Date(from).getFullYear()) * 12 + (new Date(to).getMonth() - new Date(from).getMonth());
-    if (diffMonths > 12) {
-      alert("Maksimal 12 bulan");
-      return;
-    }
-
-    const range = { preset: "custom", from, to, tz: currentRange.tz || "Asia/Jakarta" };
+  function apply(range, eventName, props, close) {
     setRange(range);
-    track("range_custom_applied", { days: Math.round((new Date(to) - new Date(from))/(1000*60*60*24))+1 }).catch(()=>{});
+    track(eventName, props).catch(() => {});
     if (onApply) onApply(range);
-    close();
+    close("apply");
+    updateHashWithRange(range);
+  }
 
-    const current = location.hash.split("?")[0];
-    const qs = new URLSearchParams(location.hash.split("?")[1] || "");
-    qs.set("preset", "custom");
-    qs.set("from", from);
-    qs.set("to", to);
-    location.hash = `${current}?${qs.toString()}`;
+  const api = openSheet({
+    id: "range-picker-sheet",
+    title: "Rentang tanggal",
+    build: (body, { close }) => {
+      const presets = document.createElement("div");
+      presets.className = "segmented range-presets";
+      presets.setAttribute("role", "group");
+      presets.setAttribute("aria-label", "Preset rentang");
+      PRESETS.forEach((p) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "btn btn-secondary btn-small";
+        b.dataset.preset = p.key;
+        b.textContent = p.label;
+        const active = currentRange && currentRange.preset === p.key;
+        b.setAttribute("aria-pressed", String(!!active));
+        if (active) b.setAttribute("aria-current", "true");
+        b.addEventListener("click", () => {
+          const range = { ...p.getRange(), tz };
+          apply(range, "range_changed", { preset: p.key, days: dayCount(range.from, range.to), module: location.hash.split("?")[0] }, close);
+        });
+        presets.appendChild(b);
+      });
+      body.appendChild(presets);
+
+      const row = document.createElement("div");
+      row.className = "range-fields";
+      function dateField(id, label, value) {
+        const wrap = document.createElement("div");
+        wrap.className = "field";
+        const lab = document.createElement("label");
+        lab.htmlFor = id;
+        lab.textContent = label;
+        const input = document.createElement("input");
+        input.type = "date";
+        input.id = id;
+        input.className = "field-input";
+        input.value = value || "";
+        input.addEventListener("input", () => setError(""));
+        wrap.append(lab, input);
+        return { wrap, input };
+      }
+      const f = dateField("range-from", "Dari", currentRange && currentRange.from);
+      const t = dateField("range-to", "Sampai", currentRange && currentRange.to);
+      fromInput = f.input;
+      toInput = t.input;
+      row.append(f.wrap, t.wrap);
+      body.appendChild(row);
+
+      errEl = document.createElement("p");
+      errEl.className = "field-error";
+      errEl.id = "range-error";
+      errEl.setAttribute("role", "alert");
+      errEl.hidden = true;
+      fromInput.setAttribute("aria-describedby", errEl.id);
+      toInput.setAttribute("aria-describedby", errEl.id);
+      body.appendChild(errEl);
+
+      const tzLine = document.createElement("p");
+      tzLine.className = "status-line range-tz";
+      tzLine.textContent = `Zona waktu: ${tz}`;
+      body.appendChild(tzLine);
+    },
+    actions: [
+      {
+        label: "Atur ulang",
+        kind: "secondary",
+        close: false,
+        onClick: () => {
+          const def = PRESETS.find((p) => p.key === "month").getRange();
+          fromInput.value = def.from;
+          toInput.value = def.to;
+          setError("");
+          return false;
+        },
+      },
+      {
+        label: "Terapkan",
+        kind: "primary",
+        close: false,
+        onClick: ({ close }) => {
+          const from = fromInput.value;
+          const to = toInput.value;
+          const v = validateCustomRange(from, to);
+          if (!v.ok) {
+            setError(v.message);
+            (v.reason === "ORDER" || v.reason === "TOO_LONG" ? toInput : fromInput).focus();
+            return false;
+          }
+          apply({ preset: "custom", from, to, tz }, "range_custom_applied", { days: dayCount(from, to) }, close);
+          return false;
+        },
+      },
+    ],
   });
-
-  makeSheetDraggable(sheet, scrim, { onDismiss: close });
-
-  return { close };
+  return api ? { close: api.close } : null;
 }
 
 export function initRangePickerButton(btnEl, onApply) {
@@ -166,4 +197,5 @@ export const rangeHelpers = {
   formatRangeLabel,
   showRangePicker,
   initRangePickerButton,
+  validateCustomRange,
 };

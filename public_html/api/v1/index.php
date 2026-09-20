@@ -701,7 +701,7 @@ try {
     if ($route === 'analytics' && $method === 'POST') {
         $events = $body['events'] ?? [];
         if (!is_array($events)) $events = [];
-        $allowed = ['signup_completed','onboarding_completed','habit_completed','habit_skipped_day','transaction_created','category_corrected','budget_threshold_hit','connection_started','connection_completed','connection_failed','sync_failed','sync_recovered','notification_opened','notification_dismissed','export_requested','deletion_requested','paywall_shown','paywall_dismissed','range_changed','range_custom_applied','range_empty_shown','search_opened','search_executed','search_result_opened','search_history_cleared','permission_granted','permission_denied','insight_viewed','goal_created','goal_completed','goal_withdrawn','celebration_shared','celebration_dismissed'];
+        $allowed = ['signup_completed','onboarding_completed','habit_completed','habit_skipped_day','transaction_created','category_corrected','budget_threshold_hit','connection_started','connection_completed','connection_failed','sync_failed','sync_recovered','notification_opened','notification_dismissed','export_requested','deletion_requested','paywall_shown','paywall_dismissed','range_changed','range_custom_applied','range_empty_shown','search_opened','search_executed','search_result_opened','search_history_cleared','permission_granted','permission_denied','insight_viewed','goal_created','goal_completed','goal_withdrawn','celebration_shared','celebration_dismissed','pwa_installed','pwa_dismissed'];
         $safe = [];
         foreach (array_slice($events,0,20) as $ev) {
             if (!isset($ev['event']) || !in_array($ev['event'], $allowed, true)) continue;

@@ -34,6 +34,21 @@ describe("Paritas allowlist event analytics (klien == PHP ×3) — checklist per
     }
   });
 
+  it("setiap literal track(\"x\") di src/ ada di allowlist (event yang tidak terdaftar di-drop diam-diam oleh analytics.js)", () => {
+    const client = parseClientAllowlist();
+    const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((d) => {
+      const full = path.join(dir, d.name);
+      if (d.isDirectory()) return d.name === "workers" || d.name === "styles" ? [] : walk(full);
+      return /\.(js|jsx)$/.test(d.name) ? [full] : [];
+    });
+    const used = new Map();
+    for (const f of walk(path.resolve(__dirname, "../src"))) {
+      for (const [, ev] of fs.readFileSync(f, "utf8").matchAll(/track\("([a-z0-9_]+)"/g)) used.set(ev, path.relative(path.resolve(__dirname, ".."), f));
+    }
+    const unregistered = [...used].filter(([ev]) => !client.has(ev));
+    expect(unregistered).toEqual([]);
+  });
+
   it("spec 05 = registry tunggal: SETIAP event di allowlist klien terdokumentasi di specs/05-analytics.md (notasi `a_b/c` diperluas)", () => {
     const spec = read("../specs/05-analytics.md");
     const documented = new Set();

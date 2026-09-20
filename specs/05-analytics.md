@@ -50,3 +50,5 @@ Event Wave 1–2 yang sebelumnya hanya terdokumentasi di spec lain (dipindahkan 
 | `search_executed` | Query ≥2 karakter dijalankan (nilai `q` TIDAK dikirim) | {scope, result_count, char_len, offline} | 19 |
 | `search_result_opened` | Hasil dibuka | {scope} | 19 |
 | `search_history_cleared` | Riwayat dihapus | {} | 19 |
+| `pwa_installed` | Install PWA diterima (prompt) / terdeteksi `appinstalled` | {source: prompt\|manual} | 15 |
+| `pwa_dismissed` | Sheet "Pasang aplikasi?" ditolak / prompt dibatalkan | {} | 15 |

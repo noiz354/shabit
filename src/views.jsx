@@ -20,6 +20,7 @@ import { getSettings, updateSetting, requestExport, requestDeleteAccount, getFAQ
 import { renderRingProgress, renderStreakDots, renderHabitBar, renderDonutCategory } from "./charts.js";
 import { showRangePicker, formatRangeLabel } from "./range.js";
 import { createSearchUI } from "./search.js";
+import { track } from "./analytics.js";
 import { feedbackHabitComplete } from "./feedback.js";
 import { shareStreakCard, copyToClipboard } from "./share.js";
 import { speak, cancelSpeak } from "./speech.js";
@@ -233,6 +234,7 @@ export function shell(root, title, bodyBuilder, options = {}) {
 
 // ---------- Search sheet (T19) ----------
 function showSearchSheet() {
+  track("search_opened", { entry: "appbar" }).catch(() => {}); // spec 19 (tanpa q)
   const api = openSheet({
     id: "search-sheet",
     title: "Cari",
