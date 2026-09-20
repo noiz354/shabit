@@ -32,6 +32,17 @@ function el(tag, className, text) {
   return n;
 }
 
+// Isi tombol hub: ikon (aria-hidden) + label + chip opsional — DOM API (tanpa innerHTML), standar seragam PR #2
+function hubContent(btn, icon, label, chip) {
+  btn.textContent = "";
+  const ic = el("span", "hub-icon", icon);
+  ic.setAttribute("aria-hidden", "true");
+  const lab = el("span", "hub-label", label);
+  btn.append(ic, lab);
+  if (chip) btn.appendChild(el("span", "chip", chip));
+  return btn;
+}
+
 function go(hash, { back = false, root } = {}) {
   const page = root ? root.querySelector(".auth-page") : null;
   if (back && page && !prefersReducedMotion()) {
@@ -126,26 +137,31 @@ export function showPermissionPrimer({ scope, icon = "🔔", title, desc, allowL
   sheet.setAttribute("role", "dialog");
   sheet.setAttribute("aria-modal", "true");
   sheet.setAttribute("aria-labelledby", "primer-title");
-  sheet.innerHTML = `
-    <div class="sheet-content">
-      <div class="sheet-handle" aria-hidden="true"></div>
-      <div class="primer-card" style="padding:8px 0 0;background:transparent">
-        <div class="primer-icon" aria-hidden="true">${icon}</div>
-        <h2 class="sheet-title" id="primer-title"></h2>
-        <p class="sheet-desc" id="primer-desc"></p>
-      </div>
-      <div id="primer-status" role="status" aria-live="polite" class="field-help" style="text-align:center;min-height:18px"></div>
-      <div class="sheet-actions" style="margin-top:12px">
-        <button type="button" class="btn btn-secondary" data-later></button>
-        <button type="button" class="btn btn-primary" data-allow></button>
-      </div>
-    </div>`;
-  sheet.querySelector("#primer-title").textContent = title;
-  sheet.querySelector("#primer-desc").textContent = desc;
-  const laterBtn = sheet.querySelector("[data-later]");
-  const allowBtn = sheet.querySelector("[data-allow]");
-  laterBtn.textContent = laterLabel;
-  allowBtn.textContent = allowLabel;
+  const content = el("div", "sheet-content");
+  const handle = el("div", "sheet-handle");
+  handle.setAttribute("aria-hidden", "true");
+  const card = el("div", "primer-card primer-card-sheet");
+  const iconEl = el("div", "primer-icon", icon);
+  iconEl.setAttribute("aria-hidden", "true");
+  const titleEl = el("h2", "sheet-title", title);
+  titleEl.id = "primer-title";
+  const descEl = el("p", "sheet-desc", desc);
+  descEl.id = "primer-desc";
+  card.append(iconEl, titleEl, descEl);
+  const statusEl = el("div", "field-help primer-status");
+  statusEl.id = "primer-status";
+  statusEl.setAttribute("role", "status");
+  statusEl.setAttribute("aria-live", "polite");
+  const actions = el("div", "sheet-actions mt-12");
+  const laterBtn = el("button", "btn btn-secondary", laterLabel);
+  laterBtn.type = "button";
+  laterBtn.dataset.later = "";
+  const allowBtn = el("button", "btn btn-primary", allowLabel);
+  allowBtn.type = "button";
+  allowBtn.dataset.allow = "";
+  actions.append(laterBtn, allowBtn);
+  content.append(handle, card, statusEl, actions);
+  sheet.appendChild(content);
   const status = sheet.querySelector("#primer-status");
   document.body.append(scrim, sheet);
   const untrap = trapFocus(sheet);
@@ -154,7 +170,7 @@ export function showPermissionPrimer({ scope, icon = "🔔", title, desc, allowL
   function close(result) {
     untrap();
     sheet.classList.add("exiting");
-    scrim.style.opacity = "0";
+    scrim.classList.add("exiting");
     setTimeout(() => {
       sheet.remove();
       scrim.remove();
@@ -336,14 +352,15 @@ export function AuthHub(root, ctx = {}) {
 
   const submit = el("button", "hub-btn primary", "");
   submit.type = "submit";
-  submit.innerHTML = `<span class="hub-icon" aria-hidden="true">✉️</span><span class="hub-label"></span>`;
-  submit.querySelector(".hub-label").textContent = mode === "login" ? "Masuk dengan email" : "Lanjut dengan email";
+  hubContent(submit, "✉️", mode === "login" ? "Masuk dengan email" : "Lanjut dengan email");
 
   function setError(msg) {
     if (!msg) { err.hidden = true; err.textContent = ""; input.removeAttribute("aria-invalid"); return; }
     err.hidden = false;
-    err.innerHTML = `<span aria-hidden="true">⚠️</span> <span></span>`;
-    err.querySelector("span:last-child").textContent = msg;
+    err.textContent = "";
+    const warn = el("span", "", "⚠️");
+    warn.setAttribute("aria-hidden", "true");
+    err.append(warn, document.createTextNode(" "), el("span", "", msg));
     input.setAttribute("aria-invalid", "true");
     input.setAttribute("aria-describedby", "auth-email-help auth-email-err");
     input.focus();
@@ -386,8 +403,7 @@ export function AuthHub(root, ctx = {}) {
     const b = el("button", "hub-btn");
     b.type = "button";
     b.setAttribute("aria-disabled", "true");
-    b.innerHTML = `<span class="hub-icon" aria-hidden="true">${icon}</span><span class="hub-label"></span><span class="chip">Belum tersedia</span>`;
-    b.querySelector(".hub-label").textContent = labelTxt;
+    hubContent(b, icon, labelTxt, "Belum tersedia");
     b.addEventListener("click", () => { status.textContent = why; });
     return b;
   };
@@ -399,7 +415,7 @@ export function AuthHub(root, ctx = {}) {
     if (!cap.offerPasskey) return; // kondisional: hanya perangkat yang sanggup
     const b = el("button", "hub-btn");
     b.type = "button";
-    b.innerHTML = `<span class="hub-icon" aria-hidden="true">🔑</span><span class="hub-label">Masuk dengan passkey</span>${cap.canEnroll ? "" : '<span class="chip">Segera</span>'}`;
+    hubContent(b, "🔑", "Masuk dengan passkey", cap.canEnroll ? null : "Segera");
     if (!cap.canEnroll) b.setAttribute("aria-disabled", "true");
     b.addEventListener("click", () => { status.textContent = PASSKEY_REASON_COPY.RP_NOT_CONFIGURED; });
     passkeySlot.appendChild(b);
@@ -480,7 +496,11 @@ export function AuthPasskey(root) {
   const { body, footer } = page(root, { step: "passkey", eyebrow: "Kunci masuk", title: "Wajahmu adalah kuncimu", lead: "Opsional. Bisa diatur nanti dari Pengaturan." });
   const status = liveStatus();
   const card = el("div", "primer-card");
-  card.innerHTML = `<div class="primer-icon" aria-hidden="true">🔐</div><h2>Passkey, tanpa kata sandi</h2><p>Masuk dan buka saldo dengan sidik jari/wajah lewat kunci layar HP-mu. Verifikasi biometrik dilakukan oleh perangkatmu; HabitWealth hanya menerima kunci publik — bukan data wajah atau sidik jarimu.</p><p class="primer-note" id="passkey-note"></p>`;
+  const pkIcon = el("div", "primer-icon", "🔐");
+  pkIcon.setAttribute("aria-hidden", "true");
+  const pkNote = el("p", "primer-note");
+  pkNote.id = "passkey-note";
+  card.append(pkIcon, el("h2", "", "Passkey, tanpa kata sandi"), el("p", "", "Masuk dan buka saldo dengan sidik jari/wajah lewat kunci layar HP-mu. Verifikasi biometrik dilakukan oleh perangkatmu; HabitWealth hanya menerima kunci publik — bukan data wajah atau sidik jarimu."), pkNote);
   body.append(card, status);
 
   const later = el("button", "btn btn-secondary", "Nanti Saja");
@@ -658,14 +678,15 @@ export function AuthFirstHabit(root) {
     ctaWrap.remove();
 
     const cel = el("div", "celebrate");
-    cel.innerHTML = `<div class="celebrate-ring" aria-hidden="true">🎉</div><h2>Habit pertama selesai!</h2><p>Itu tadi inti HabitWealth. Besok tinggal ulangi.</p>`;
+    const ring = el("div", "celebrate-ring", "🎉");
+    ring.setAttribute("aria-hidden", "true");
+    cel.append(ring, el("h2", "", "Habit pertama selesai!"), el("p", "", "Itu tadi inti HabitWealth. Besok tinggal ulangi."));
     body.appendChild(cel);
     const done = await completeOnboarding({ firstHabitId: habit.id });
     status.textContent = done.duration_s ? `Selesai dalam ${Math.floor(done.duration_s / 60)} mnt ${done.duration_s % 60} dtk.` : "";
 
-    const toHome = el("button", "btn btn-primary", "Ke Beranda");
+    const toHome = el("button", "btn btn-primary btn-block", "Ke Beranda");
     toHome.type = "button";
-    toHome.style.width = "100%";
     toHome.addEventListener("click", () => { location.hash = `#${consumeReturnTo() || "/beranda"}?first=1`; });
     body.appendChild(toHome);
     toHome.focus();
@@ -690,16 +711,16 @@ export function AuthRecovery(root) {
   const list = el("div", "hub-list");
   const emailBtn = el("button", "hub-btn primary");
   emailBtn.type = "button";
-  emailBtn.innerHTML = `<span class="hub-icon" aria-hidden="true">✉️</span><span class="hub-label">Masuk ulang dengan email</span>`;
+  hubContent(emailBtn, "✉️", "Masuk ulang dengan email");
   emailBtn.addEventListener("click", () => { resetBiometricFailures(); location.hash = isLoggedIn() ? `#/auth/${getNextStep() === "done" ? "" : getNextStep()}` : "#/auth/hub?mode=login"; });
   const pinBtn = el("button", "hub-btn");
   pinBtn.type = "button";
   pinBtn.setAttribute("aria-disabled", "true");
-  pinBtn.innerHTML = `<span class="hub-icon" aria-hidden="true">🔢</span><span class="hub-label">PIN</span><span class="chip">Belum diatur</span>`;
+  hubContent(pinBtn, "🔢", "PIN", "Belum diatur");
   const linkBtn = el("button", "hub-btn");
   linkBtn.type = "button";
   linkBtn.setAttribute("aria-disabled", "true");
-  linkBtn.innerHTML = `<span class="hub-icon" aria-hidden="true">🔗</span><span class="hub-label">Tautan masuk via email</span><span class="chip">Belum tersedia</span>`;
+  hubContent(linkBtn, "🔗", "Tautan masuk via email", "Belum tersedia");
   list.append(emailBtn, pinBtn, linkBtn);
   body.appendChild(list);
   body.appendChild(el("p", "consent-legal", "PIN dan tautan email menyusul setelah backend identitas tersedia. Data habit/uangmu tetap aman di perangkat."));

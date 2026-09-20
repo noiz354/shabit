@@ -384,3 +384,8 @@
 @media (prefers-reduced-motion: reduce) {
   .celebrate .celebrate-ring { animation-name: fade-in; }
 }
+
+/* Primer sheet (views-auth) — dulu inline style; kini kelas (standar seragam PR #2) */
+.primer-card-sheet { padding: 8px 0 0; background: transparent; }
+.primer-status { text-align: center; min-height: 18px; }
+.mt-12 { margin-top: 12px; }

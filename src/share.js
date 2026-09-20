@@ -83,8 +83,8 @@ export async function copyToClipboard(text) {
   try {
     const ta = document.createElement("textarea");
     ta.value = text;
-    ta.style.position = "fixed";
-    ta.style.opacity = "0";
+    ta.className = "sr-only"; // offscreen via class (auth.css), bukan inline style
+    ta.setAttribute("aria-hidden", "true");
     document.body.appendChild(ta);
     ta.select();
     const ok = document.execCommand("copy");

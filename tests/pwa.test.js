@@ -131,4 +131,33 @@ describe("PWA install sheet (spec 15)", () => {
     expect(document.getElementById("pwa-install-sheet")).toBeNull();
     window.matchMedia = mm;
   });
+
+  it("offline banner + SW update prompt dibangun via DOM API (tanpa innerHTML): banner ikon+teks saat offline & hilang saat online; 'Muat versi baru' → SKIP_WAITING ke SW waiting; 'Nanti' menutup", async () => {
+    const pwa = await import("../src/pwa.js");
+    Object.defineProperty(navigator, "onLine", { value: false, configurable: true });
+    const { hideOffline } = pwa.initOfflineBanner();
+    const banner = document.querySelector(".offline-banner");
+    expect(banner).toBeTruthy();
+    expect(banner.getAttribute("role")).toBe("status");
+    expect(banner.querySelector(".offline-icon").getAttribute("aria-hidden")).toBe("true");
+    expect(banner.textContent).toMatch(/Kamu offline — perubahan disimpan, terkirim otomatis/);
+    expect(banner.querySelectorAll("[style]").length).toBe(0);
+    window.dispatchEvent(new Event("online"));
+    expect(document.querySelector(".offline-banner")).toBeNull();
+    Object.defineProperty(navigator, "onLine", { value: true, configurable: true });
+    hideOffline();
+
+    const waiting = { postMessage: vi.fn() };
+    const promptEl = pwa.showUpdatePrompt({ waiting });
+    expect(promptEl.getAttribute("role")).toBe("alert");
+    expect(promptEl.querySelectorAll("[style]").length).toBe(0);
+    expect([...promptEl.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["Muat versi baru", "Nanti"]);
+    expect(pwa.showUpdatePrompt({ waiting })).toBeUndefined(); // tidak ganda
+    promptEl.querySelector('[data-action="update"]').click();
+    expect(waiting.postMessage).toHaveBeenCalledWith({ type: "SKIP_WAITING" });
+    expect(document.getElementById("pwa-update-prompt")).toBeNull();
+    const again = pwa.showUpdatePrompt({ waiting });
+    again.querySelector('[data-action="dismiss"]').click();
+    expect(document.getElementById("pwa-update-prompt")).toBeNull();
+  });
 });

@@ -232,6 +232,7 @@ body {
   animation: fade-in var(--motion-fast, 150ms) var(--easing-standard) both;
 }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.scrim.exiting { animation: none; opacity: 0; transition: opacity var(--motion-fast, 150ms) var(--easing-exit, ease-in); }
 
 /* Update prompt */
 .update-prompt {
@@ -407,10 +408,18 @@ body {
 .balance { font-size: 14px; display: flex; align-items: center; gap: 4px; }
 .balance strong { font-size: 18px; }
 .budget-head { display: flex; justify-content: space-between; font-size: 14px; }
+/* Progress budget = <progress> native (nilai lewat atribut value; warna status via [data-status]) */
 .progress { height: 8px; background: var(--surface-variant); border-radius: 4px; margin-top: 8px; overflow: hidden; }
-.progress-bar { height: 100%; background: var(--positive); transition: width var(--motion-emphasized) var(--easing-standard); }
-.progress-bar[data-status="warning"] { background: var(--warning); }
-.progress-bar[data-status="over"] { background: var(--negative); }
+.budget-progress { display: block; width: 100%; height: 8px; border: 0; border-radius: 4px; overflow: hidden; margin-top: 8px; background: var(--surface-variant); accent-color: var(--positive); appearance: none; -webkit-appearance: none; }
+.budget-progress::-webkit-progress-bar { background: var(--surface-variant); border-radius: 4px; }
+.budget-progress::-webkit-progress-value { background: var(--positive); transition: width var(--motion-emphasized) var(--easing-standard); }
+.budget-progress::-moz-progress-bar { background: var(--positive); }
+.budget-progress[data-status="warning"] { accent-color: var(--warning); }
+.budget-progress[data-status="warning"]::-webkit-progress-value { background: var(--warning); }
+.budget-progress[data-status="warning"]::-moz-progress-bar { background: var(--warning); }
+.budget-progress[data-status="over"] { accent-color: var(--negative); }
+.budget-progress[data-status="over"]::-webkit-progress-value { background: var(--negative); }
+.budget-progress[data-status="over"]::-moz-progress-bar { background: var(--negative); }
 .budget-foot { font-size: 11px; color: var(--on-background-tertiary); margin-top: 4px; }
 .feed { display: flex; flex-direction: column; gap: 8px; }
 .tx-item {
@@ -522,3 +531,7 @@ body {
 .range-fields { display: flex; gap: 12px; margin-bottom: 8px; }
 .range-fields .field { flex: 1; }
 .range-tz { margin-top: 12px; }
+
+/* Chart fullscreen button (orientation.js) — posisi via class, bukan inline style */
+.chart-has-fs { position: relative; }
+.chart-fs-btn { position: absolute; top: 8px; right: 8px; }

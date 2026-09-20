@@ -143,6 +143,13 @@
 - **Verifikasi**: `npm test` **90/90** (11 file); `vite build` main **180.94 kB / gzip 59.43 kB**; dev server modul yang diubah 200. NOT TESTED: SW offline/precache nyata, tampilan di perangkat (tanpa Chromium).
 - **Next**: T10 bila partner terverifikasi; sisa T13 yang butuh browser (SW offline, LCP/CLS) menunggu perangkat; `range_empty_shown` belum dipicu (spec 17) — kandidat kecil berikutnya. Owner items tetap: ADR-0001 §5 A/B, cron, SMTP, perangkat.
 
+## 19 Sep 2026 — Sesi 3 (lanjutan): syarat tambahan reviewer — standar seragam DOM API di seluruh modul UI
+- **Konteks**: reviewer memverifikasi `5834850` + `8dd6e7a` dan menetapkan satu syarat tambahan sebelum merge: `pwa.js` 2 innerHTML statis → DOM API, atau catat pengecualian — "standar harus seragam".
+- **Dilakukan** (dipilih menyamakan, bukan mencatat pengecualian): `pwa.js` offline banner + SW update prompt → DOM API (`showUpdatePrompt` diekspor untuk tes). Audit modul UI lain dengan pola yang sama menemukan sisa yang belum seragam → disamakan sekalian: `views-auth.jsx` (3 atribut `style=` inline di primer sheet — pelanggaran rule lama yang lolos karena test statik hanya `views.jsx` — + 9 innerHTML statis ikon/label → helper `hubContent()` dan DOM), `charts.js` (3 placeholder → `placeholder()`), `ui.js`/`views-auth.jsx` (`scrim.style.opacity="0"` → kelas `.scrim.exiting`), `views.jsx` (bar budget `style.width` → `<progress value max data-status>` native; pengecualian lama `[".style.width ="]` di test statik dihapus → `[]`), `orientation.js` (tombol fullscreen inline position → `.chart-has-fs`/`.chart-fs-btn`), `share.js` (textarea fallback clipboard → `.sr-only`).
+- **Guardrail**: `tests/guardrails.test.js` += `UI_MODULES` (11 modul) — per baris: `.style.* =`, innerHTML markup, `insertAdjacentHTML/outerHTML`, `style=`/`onclick=`, hex (kecuali `TOKEN_FALLBACK`), dialog sistem global (`(?<![.\w])(alert|confirm|prompt)\(` — `deferredPrompt.prompt()` bukan dialog); komentar tidak dihitung. Pengecualian eksplisit & beralasan: `gestures.js`/`motion.js`/`keyboard.js` (transform per-frame), `theme.js` (preferensi runtime). Ditulis di `AGENTS.md` Boundaries + QA §5.
+- **Verifikasi**: `npm test` **101/101** (11 file; +guardrails UI_MODULES 11, +pwa banner/update 1); `vite build` main **180.29 kB / gzip 59.17 kB**. Test primer/hub/first-habit lama (auth-views) tetap hijau setelah konversi DOM. NOT TESTED: tampilan nyata di browser (tanpa Chromium).
+- **Status PR #2**: dari sisi build semua syarat reviewer (a)(b)+seragam terpenuhi; menunggu merge. 4 item owner tetap terbuka (ADR-0001 §5 A/B, cron, SMTP, perangkat).
+
 ## Log format going forward
 `## <date> — <phase>`: Done / Blocked / Decisions / Next. Update tiap selesai 1 tugas TODO.
 

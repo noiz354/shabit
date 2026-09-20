@@ -166,10 +166,13 @@ export function initOfflineBanner() {
     offlineBanner.className = "offline-banner";
     offlineBanner.setAttribute("role", "status");
     offlineBanner.setAttribute("aria-live", "polite");
-    offlineBanner.innerHTML = `
-      <span class="offline-icon" aria-hidden="true">◍</span>
-      <span>Kamu offline — perubahan disimpan, terkirim otomatis</span>
-    `;
+    const icon = document.createElement("span");
+    icon.className = "offline-icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = "◍";
+    const text = document.createElement("span");
+    text.textContent = "Kamu offline — perubahan disimpan, terkirim otomatis";
+    offlineBanner.append(icon, text);
     document.body.appendChild(offlineBanner);
     // Also trigger outbox flush check when back online
   }
@@ -224,7 +227,7 @@ export function initSWUpdatePrompt() {
   });
 }
 
-function showUpdatePrompt(reg) {
+export function showUpdatePrompt(reg) {
   let promptEl = document.getElementById("pwa-update-prompt");
   if (promptEl) return;
 
@@ -232,27 +235,35 @@ function showUpdatePrompt(reg) {
   promptEl.id = "pwa-update-prompt";
   promptEl.className = "update-prompt";
   promptEl.setAttribute("role", "alert");
-  promptEl.innerHTML = `
-    <div class="update-content">
-      <span>Versi baru tersedia</span>
-      <button class="btn btn-primary btn-small" data-action="update">Muat versi baru</button>
-      <button class="btn btn-flat btn-small" data-action="dismiss">Nanti</button>
-    </div>
-  `;
+  const content = document.createElement("div");
+  content.className = "update-content";
+  const label = document.createElement("span");
+  label.textContent = "Versi baru tersedia";
+  const updateBtn = document.createElement("button");
+  updateBtn.type = "button";
+  updateBtn.className = "btn btn-primary btn-small";
+  updateBtn.dataset.action = "update";
+  updateBtn.textContent = "Muat versi baru";
+  const dismissBtn = document.createElement("button");
+  dismissBtn.type = "button";
+  dismissBtn.className = "btn btn-flat btn-small";
+  dismissBtn.dataset.action = "dismiss";
+  dismissBtn.textContent = "Nanti";
+  content.append(label, updateBtn, dismissBtn);
+  promptEl.appendChild(content);
   document.body.appendChild(promptEl);
 
-  promptEl.querySelector('[data-action="update"]')?.addEventListener("click", async () => {
+  // Spec 15: versi baru hanya dimuat saat user tap (SKIP_WAITING → controllerchange → reload sekali)
+  updateBtn.addEventListener("click", () => {
     if (reg && reg.waiting) {
       reg.waiting.postMessage({ type: "SKIP_WAITING" });
     } else {
-      // fallback: reload
       window.location.reload();
     }
     promptEl.remove();
   });
-  promptEl.querySelector('[data-action="dismiss"]')?.addEventListener("click", () => {
-    promptEl.remove();
-  });
+  dismissBtn.addEventListener("click", () => promptEl.remove());
+  return promptEl;
 }
 
 // Mark first habit done — triggers install prompt logic

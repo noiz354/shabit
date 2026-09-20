@@ -115,3 +115,34 @@ describe("charts.js token-only (syarat merge (a))", () => {
     expect(location.hash).toBe("#/uang?preset=month");
   });
 });
+
+// Standar seragam (syarat merge PR #2, reviewer 19 Sep 2026): SEMUA modul yang membangun UI memakai DOM API + kelas token —
+// tanpa innerHTML markup (statis sekalipun), tanpa `.style.* =`, tanpa atribut style=/onclick=, tanpa hex.
+// Pengecualian eksplisit (bukan pembangun UI): gestures.js/motion.js/keyboard.js (transform per-frame dari input pengguna),
+// theme.js (color-scheme/font-scale = preferensi runtime pengguna). Menambah modul UI baru = tambahkan ke daftar ini.
+const UI_MODULES = [
+  "../src/ui.js", "../src/pwa.js", "../src/search.js", "../src/range.js", "../src/charts.js", "../src/share.js", "../src/orientation.js",
+  "../src/views.jsx", "../src/views-auth.jsx", "../src/views-notify.jsx", "../src/views-insight.jsx",
+];
+describe("Standar seragam modul UI: DOM API + kelas token (tanpa innerHTML markup / inline style / onclick / hex)", () => {
+  for (const rel of UI_MODULES) {
+    it(`${rel.replace("../src/", "")} bersih`, () => {
+      const src = read(rel);
+      const lines = src.split("\n");
+      const offenders = [];
+      lines.forEach((l, i) => {
+        const n = i + 1;
+        const t = l.trim();
+        if (t.startsWith("//") || t.startsWith("*") || t.startsWith("/*")) return; // komentar tidak dihitung
+        if (/\.style\.[a-zA-Z]+\s*=/.test(l)) offenders.push(`${n}: inline style → ${l.trim().slice(0, 80)}`);
+        if (/innerHTML\s*=\s*[`'"]\s*</.test(l) || /innerHTML\s*=\s*`\s*$/.test(l)) offenders.push(`${n}: innerHTML markup → ${l.trim().slice(0, 80)}`);
+        if (/insertAdjacentHTML|outerHTML\s*=/.test(l)) offenders.push(`${n}: HTML string → ${l.trim().slice(0, 80)}`);
+        if (/\bstyle="/.test(l) || /\bonclick=/.test(l)) offenders.push(`${n}: atribut inline → ${l.trim().slice(0, 80)}`);
+        if (/#[0-9A-Fa-f]{3,6}\b/.test(l) && !l.includes("TOKEN_FALLBACK")) offenders.push(`${n}: hex → ${l.trim().slice(0, 80)}`);
+        // dialog sistem global (bukan method seperti BeforeInstallPromptEvent.prompt())
+        if (/(?<![.\w])(alert|confirm|prompt)\(/.test(l)) offenders.push(`${n}: dialog sistem → ${l.trim().slice(0, 80)}`);
+      });
+      expect(offenders).toEqual([]);
+    });
+  }
+});

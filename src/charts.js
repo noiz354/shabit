@@ -19,6 +19,15 @@ export function tokenColor(name) {
 }
 
 
+function placeholder(container, text) {
+  container.textContent = "";
+  const p = document.createElement("p");
+  p.className = "placeholder";
+  p.textContent = text;
+  container.appendChild(p);
+  return p;
+}
+
 let echartsCore = null;
 
 async function loadECharts() {
@@ -126,7 +135,7 @@ export function renderStreakDots(container, streakDays, max = 30) {
 export async function renderHabitBar(container, data, options = {}) {
   const echarts = await loadECharts();
   if (!echarts) {
-    container.innerHTML = `<p class="placeholder">Chart tidak tersedia</p>`;
+    placeholder(container, "Chart tidak tersedia");
     return null;
   }
 
@@ -187,7 +196,7 @@ export async function renderHabitBar(container, data, options = {}) {
 export async function renderDonutCategory(container, data, options = {}) {
   const echarts = await loadECharts();
   if (!echarts) {
-    container.innerHTML = `<p class="placeholder">Chart tidak tersedia</p>`;
+    placeholder(container, "Chart tidak tersedia");
     return null;
   }
 
@@ -302,7 +311,7 @@ export async function renderScatterIfNeeded(container, data, options = {}) {
 
   const tier = getAdaptiveTier();
   if (!tier.fidelity.enableScatter) {
-    container.innerHTML = `<p class="placeholder">Scatter dinonaktifkan di mode hemat (tier ${tier.tier}).</p>`;
+    placeholder(container, `Scatter dinonaktifkan di mode hemat (tier ${tier.tier}).`);
     return null;
   }
 

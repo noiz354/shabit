@@ -114,7 +114,7 @@ export function openSheet(o = {}) {
     closed = true;
     untrap();
     sheet.classList.add("exiting");
-    scrim.style.opacity = "0";
+    scrim.classList.add("exiting");
     setTimeout(() => {
       sheet.remove();
       scrim.remove();

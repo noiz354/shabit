@@ -81,9 +81,9 @@ describe("views.jsx — utang Wave 2 lunas (statik)", () => {
     expect(src).not.toMatch(/\bconfirm\(/);
     expect(src).not.toMatch(/\bprompt\(/);
   });
-  it("tanpa inline style visual (hanya width data progress + token motion) dan reload hanya setelah wipe", () => {
+  it("tanpa inline style sama sekali (progress budget = <progress value> native) dan reload hanya setelah wipe", () => {
     const styleUses = src.match(/\.style\.[a-zA-Z]+\s*=/g) || [];
-    expect(styleUses).toEqual([".style.width ="]);
+    expect(styleUses).toEqual([]);
     expect((src.match(/location\.reload\(\)/g) || []).length).toBe(1);
     expect(src).not.toMatch(/style="/);
   });

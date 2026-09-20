@@ -694,16 +694,12 @@ export function Uang(root, ctx = {}) {
           const head = el("div", "budget-head");
           const statusText = b.status === "over" ? "⚠️ lewat" : b.status === "warning" ? "⚠️ 80%+" : "aman";
           head.append(el("span", "", b.category), el("span", "", `${b.pct}% • ${statusText}`));
-          const prog = el("div", "progress");
-          prog.setAttribute("role", "progressbar");
-          prog.setAttribute("aria-valuemin", "0");
-          prog.setAttribute("aria-valuemax", "100");
-          prog.setAttribute("aria-valuenow", String(Math.min(100, b.pct)));
+          // <progress> native: nilai data lewat atribut value (bukan inline style); warna status via [data-status] di app.css
+          const prog = el("progress", "progress-bar budget-progress");
+          prog.max = 100;
+          prog.value = Math.min(100, b.pct);
+          prog.dataset.status = b.status;
           prog.setAttribute("aria-label", `Budget ${b.category} ${b.pct}%`);
-          const bar = el("div", "progress-bar");
-          bar.dataset.status = b.status;
-          bar.style.width = `${Math.min(100, b.pct)}%`; // nilai data, bukan token visual
-          prog.appendChild(bar);
           card.append(head, prog, el("div", "budget-foot", `${getDisplayAmount(b.spent)} / ${getDisplayAmount(b.limit)}`));
           budgetWrap.appendChild(card);
         });
