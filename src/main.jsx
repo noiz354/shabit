@@ -1,6 +1,7 @@
 import { render } from "preact";
 import "./styles/tokens.css";
 import "./styles/app.css";
+import "./styles/auth.css";
 import "../assets/css/motion.css";
 import "../assets/js/capabilities.js"; // single source; window.HWCapabilities
 import { initRouter } from "./router.js";
@@ -13,10 +14,13 @@ import { initSync } from "./sync.js";
 import { initPWAInstall, initOfflineBanner, initSWUpdatePrompt } from "./pwa.js";
 import { initPerfObserver, initPerfBeacon, mark } from "./perf.js";
 import { setupCancelOnNavigate } from "./speech.js";
+import { auth } from "./auth.js";
+import { webauthn } from "./webauthn.js";
 
 // Wave 0 — Foundation (AUD-STORE-01, AUD-ROUTER-01, AUD-CRYPTO-01, AUD-PERM-01, AUD-ANAL-01)
 // Wave 1 — Shell, motion, PWA (AUD-PWA-01, MOTION-01, GEST-01, KBD-01, THEME-01, SYNC-01) + T3/T4/T15
 // Wave 2 — Features (AUD-API-01/WORK-01/HAPT-01/SND-01/SPCH-01/NOTIF-01/SEARCH-01/ORIENT-01/SHARE-01/PERF-01/NET-01/PRINT-01/CAP-01/IMPORT-01) + T6–T19
+// T5 — AuthHub + Consent + Primer + First habit (spec 07), router guard authGate(); Wave 3 WebAuthn = deteksi kapabilitas saja (gated)
 
 async function bootstrap() {
   const root = document.getElementById("app");
@@ -101,6 +105,8 @@ async function bootstrap() {
   // 10. Router (hash + param restore + URLPattern + back restores range/search)
   try {
     initRouter(root);
+    // T12: Kotak Masuk + evaluasi pengingat (foreground/visibility/timer) — tidak memblokir render, tidak memicu dialog sistem
+    import("./notify.js").then((m) => m.initNotify()).catch((e) => console.warn("[main] notify init failed", e));
   } catch (e) {
     console.error("[main] router init failed", e);
     root.innerHTML = "<div class='page'><header class='viewing-area'><h1>HabitWealth</h1></header><div class='interaction-area'><p class='placeholder'>Gagal memuat router.</p></div></div>";
@@ -112,6 +118,9 @@ async function bootstrap() {
   try {
     window.HWStorage = { getDB, store };
     window.HWTheme = { initTheme };
+    window.HWAuth = auth; // T5: state auth/onboarding untuk QA (resetAuthState, getNextStep, dst.)
+    window.HWWebAuthn = webauthn; // Wave 3 gated: kapabilitas passkey
+    window.HWNotify = { load: () => import("./notify.js") }; // T12 (lazy)
     window.HWPerf = { getMetrics: () => import("./perf.js").then((m) => m.getPerfMetrics()) };
   } catch {}
 }

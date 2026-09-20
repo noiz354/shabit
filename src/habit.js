@@ -122,6 +122,11 @@ export async function completeHabit(habitId, dateStr) {
     habit.streak = (habit.streak || 0) + 1;
     habit.updatedAt = Date.now();
     await idbPut(STORE, habit);
+    // T12: milestone 7/30 → Kotak Masuk (dedup per habit; tanpa judul habit di copy)
+    try {
+      const { checkStreakMilestone } = await import("./notify.js");
+      await checkStreakMilestone(habitId, habit.streak);
+    } catch {}
   }
 
   try {

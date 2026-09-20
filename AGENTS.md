@@ -5,8 +5,10 @@ CSR One UI untuk PHP 40-shared. Manual-first. Tanpa money movement. Indonesia co
 
 ## Commands
 ```
+Setup: npm ci             # WAJIB setelah clone/checkout (lockfile; node_modules tidak di-commit — basi = test gagal palsu)
 Build: npm run build      # vite build -> dist/ -> FTP public_html/
 Dev: npm run dev
+Test: npm test            # vitest run (happy-dom + fake-indexeddb; fetch di-stub gagal = tanpa backend)
 PHP smoke: php -S localhost:8000 -t public_html
 Unzip ref: zip sudah dipindah user ke luar repo — perbarui path bila perlu; hasil unzip = suplemen (lihat Structure)
 CodeGraph: codegraph sync (re-index; .codegraph/ di-ignore, regenerable)
@@ -24,6 +26,10 @@ specs/18-api-design.md → kontrak /api/v1/*, session-cookie, idempotency
 specs/19-search.md → search global 4 scope, history lokal max-5, index offline
 assets/css/           → tokens.css, motion.css
 assets/js/            → router/habit/money/settings/range/charts (CSR, transform/opacity only)
+src/auth.js + src/views-auth.jsx → T5 sesi lokal-first + onboarding state machine + authGate (spec 07)
+tests/ + docs/qa/     → T13 vitest + QA matrix/traceability/Go-No-Go (status jujur PASS/NOT TESTED/BLOCKED)
+src/ui.js             → toast/sheet/confirm One UI (pengganti alert/confirm); src/notify.js + src/views-notify.jsx → T12 Kotak Masuk + Quiet Hours tz-user
+docs/adr/ + db/migrations/ → keputusan arsitektur (ADR-0001 passkey PROPOSED, ADR-0002 push ACCEPTED) + migrasi SQL terpisah
 public_html/api/v1/*.php → thin JSON, PDO prepared, redacted logs
 reference/oneui/ → suplemen, jangan edit; kanonis tetap DESIGN.md lokal
 ```
@@ -34,7 +40,9 @@ One UI: Primary `#0381FE`, 24dp margin, radius 18 btn/16 card/26 dialog/24 pill,
 ## Boundaries
 - Always: spec dulu (Addy Osmani SPECIFY→PLAN→TASKS→IMPLEMENT, gated); skill routing per `docs/agent-skills-map.md` (`frontend-ui-engineering` untuk UI, `source-driven-development` untuk verifikasi docs, `verification-before-completion` sebelum klaim DONE); update TODO+PROGRESS tiap tugas; reduced-motion; re-auth aksi sensitif; non-color cues.
 - Ask first: skema DB final, endpoint PHP baru, klaim provider/legal/vendor, premium/paywall.
-- Never: transfer/custody/auto-debit; klaim Plaid/Nordigen/E2EE/pasal UU/retensi final; SSR/Node di shared host; PII di analytics/log; hardcode warna/durasi di fitur; fade global; `isLoading` saja.
+- Never: transfer/custody/auto-debit; klaim Plaid/Nordigen/E2EE/pasal UU/retensi final; SSR/Node di shared host; PII di analytics/log; hardcode warna/durasi di fitur; fade global; `isLoading` saja; `alert()/confirm()/prompt()` (pakai `src/ui.js` sheet/toast); inline style visual di views (class + token).
+- Checklist permanen sebelum commit yang menyentuh event analytics (syarat merge PR #2 (b), 19 Sep 2026): nama event **wajib** ditambah di **empat** tempat sekaligus — `src/analytics.js` `ALLOWED_EVENTS` + `public_html/api/v1/analytics.php` + `index.php` + `reports.php` (`$allowed`) — **dan** didokumentasikan di `specs/05-analytics.md` (registry tunggal). Dijaga `tests/guardrails.test.js` (paritas set identik + terdokumentasi); jangan pernah melonggarkan tes itu. Chart/SVG hand-rolled juga token-only (class di `app.css`; hex hanya `TOKEN_FALLBACK` di `charts.js`).
+- Standar seragam modul UI (syarat merge PR #2, 19 Sep 2026): **semua** modul yang membangun UI (`ui.js`, `pwa.js`, `search.js`, `range.js`, `charts.js`, `share.js`, `orientation.js`, `views*.jsx`) memakai **DOM API + kelas token** — tanpa `innerHTML` markup (statis sekalipun), tanpa `.style.* =`, tanpa `style=`/`onclick=`, tanpa hex, tanpa `alert/confirm/prompt`. Nilai data → atribut (`<progress value>`), bukan style. Pengecualian eksplisit (bukan pembangun UI): `gestures.js`/`motion.js`/`keyboard.js` (transform per-frame dari input), `theme.js` (color-scheme/font-scale preferensi runtime). Dijaga `tests/guardrails.test.js` `UI_MODULES` — modul UI baru wajib ditambahkan ke daftar itu.
 
 ## Success
 First habit <3mnt; LCP<2.5s/CLS<0.1 diukur; Gate A–E + kill-criteria lolos dengan evidence.

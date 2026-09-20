@@ -21,6 +21,9 @@ Activation (first habit <3mnt, first manual tx), Engagement (habit_completed/har
 | `notification_opened/dismissed` | Tap/swipe | {category, deep_link} | HW-NTF |
 | `export_requested/deletion_requested` | Tombol confirm | {scope} | HW-SET |
 | `paywall_shown/dismissed` | Hanya bila premium disetujui | {variant} | HW-BIZ |
+| `insight_viewed` (amandemen T11, 19 Sep 2026) | Ringkasan insight tampil (opt-in ON) | {period, has_scatter, confidence} | HW-INS |
+| `goal_created/completed/withdrawn` (T11) | Celengan dibuat / target tercapai / tarik dikonfirmasi | {daily_bucket} / {days} / {reason} — **tanpa nominal** | HW-INS |
+| `celebration_shared/dismissed` (T11) | Share card / tutup sheet perayaan | {streak_day} / {streak_day, never_again} | HW-INS |
 
 Larangan: nama, email, no rekening mentah, deskripsi transaksi, judul habit, nilai health di properties. Gunakan hash id.
 
@@ -32,3 +35,20 @@ Dedup via idempotency key, offline queue flush berurutan, clock-skew pakai serve
 
 ## Motion/analytics mapping
 Setiap push/notifikasi yang di-tap fire `notification_opened`; milestone habit fire `habit_completed` + `task_succeeded` haptic sekali.
+
+## Registry allowlist (amandemen 19 Sep 2026 — syarat merge PR #2 (b), checklist permanen)
+**Aturan**: setiap nama event di `src/analytics.js` `ALLOWED_EVENTS` **harus** (1) tercantum di spec ini, dan (2) identik (set yang sama) dengan `$allowed` di `public_html/api/v1/analytics.php`, `index.php`, dan `reports.php`. Dijaga otomatis oleh `tests/guardrails.test.js` (gagal bila ada event yang hanya ada di satu sisi atau tidak terdokumentasi di sini). Menambah event = ubah **keempat** daftar + baris di spec ini dalam satu commit.
+
+Event Wave 1–2 yang sebelumnya hanya terdokumentasi di spec lain (dipindahkan ke registry ini agar satu sumber):
+| Event | Trigger | Props (tanpa PII/nominal) | Spec asal |
+|---|---|---|---|
+| `permission_granted/denied` | Hasil dialog izin sistem setelah primer | {scope} | 07 / 11 |
+| `range_changed` | Preset/rentang global berubah | {preset, days, module} | 17 |
+| `range_custom_applied` | Rentang kustom diterapkan | {days} | 17 |
+| `range_empty_shown` | Rentang tanpa data | {module, days} | 17 |
+| `search_opened` | Sheet pencarian dibuka | {entry} | 19 |
+| `search_executed` | Query ≥2 karakter dijalankan (nilai `q` TIDAK dikirim) | {scope, result_count, char_len, offline} | 19 |
+| `search_result_opened` | Hasil dibuka | {scope} | 19 |
+| `search_history_cleared` | Riwayat dihapus | {} | 19 |
+| `pwa_installed` | Install PWA diterima (prompt) / terdeteksi `appinstalled` | {source: prompt\|manual} | 15 |
+| `pwa_dismissed` | Sheet "Pasang aplikasi?" ditolak / prompt dibatalkan | {} | 15 |

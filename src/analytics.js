@@ -39,6 +39,16 @@ const ALLOWED_EVENTS = new Set([
   "search_history_cleared",
   "permission_granted",
   "permission_denied",
+  // T11 (spec 05 amandemen 19 Sep 2026) — tanpa nominal/judul habit
+  "insight_viewed",
+  "goal_created",
+  "goal_completed",
+  "goal_withdrawn",
+  "celebration_shared",
+  "celebration_dismissed",
+  // spec 15 PWA (ditemukan guardrail T13: dipakai pwa.js tetapi belum di allowlist → sebelumnya di-drop diam-diam)
+  "pwa_installed",
+  "pwa_dismissed",
 ]);
 
 const MAX_QUEUE = 100;

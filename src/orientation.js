@@ -134,11 +134,8 @@ export function makeChartFullscreenable(chartContainer, options = {}) {
     btn.className = "btn btn-secondary btn-small chart-fs-btn";
     btn.textContent = "⛶";
     btn.setAttribute("aria-label", "Layar penuh");
-    btn.style.position = "absolute";
-    btn.style.top = "8px";
-    btn.style.right = "8px";
     btn.addEventListener("click", toggle);
-    chartContainer.style.position = "relative";
+    chartContainer.classList.add("chart-has-fs"); // posisi tombol via app.css (.chart-has-fs / .chart-fs-btn)
     chartContainer.appendChild(btn);
   } else {
     btn.addEventListener("click", toggle);

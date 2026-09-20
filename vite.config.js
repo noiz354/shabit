@@ -54,6 +54,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,png,svg,webmanifest}"],
+        // T12: handler notificationclick (public/sw-notify.js) — generateSW tidak punya custom handler
+        importScripts: ["sw-notify.js"],
         // Ensure offline.html is precached
         additionalManifestEntries: [{ url: "offline.html", revision: null }],
         navigateFallback: "offline.html",

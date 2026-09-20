@@ -1,9 +1,10 @@
 /**
  * HabitWealth — versioned IndexedDB layer (AUD-STORE-01)
- * DB: habitwealth-v1, version 2 (v-guard: old code ignores new stores)
+ * DB: habitwealth-v1, version 3 (v-guard: old code ignores new stores)
  * Stores:
  *  v1: kv, outbox, habits, habit_entries, transactions, budgets, search_index
  *  v2: savings_goals, export_meta, opfs_fallback
+ *  v3: inbox (T12 notifikasi in-app: dedup id, deliver_after, read/archived/expires)
  *
  * Acceptance:
  *  - migration v1→v2 + quota-full path
@@ -12,7 +13,7 @@
  */
 
 const DB_NAME = "habitwealth-v1";
-export const DB_VERSION = 2;
+export const DB_VERSION = 3;
 
 let dbPromise = null;
 
@@ -91,6 +92,15 @@ function openIDB() {
         // analytics queue store (for AUD-ANAL-01)
         const analytics = createStoreIfMissing(db, "analytics_queue", { keyPath: "id" });
         if (analytics) analytics.createIndex("by_created", "createdAt");
+      }
+
+      // v3 — T12 inbox notifikasi (spec 11 amandemen). v-guard: kode lama mengabaikan store ini.
+      if (oldV < 3) {
+        const inbox = createStoreIfMissing(db, "inbox", { keyPath: "id" });
+        if (inbox) {
+          inbox.createIndex("by_created", "created_at");
+          inbox.createIndex("by_category", "category");
+        }
       }
     };
 

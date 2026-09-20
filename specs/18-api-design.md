@@ -9,7 +9,7 @@ Kontrak JSON penuh untuk CSR — tipis, idempoten, tanpa PII di log/analytics. P
 - Session cookie `HttpOnly; Secure; SameSite=Lax`; login/logout; CSRF token (header `X-CSRF-Token`) untuk POST/PATCH/DELETE cookie-based.
 - Re-auth biometrik/PIN (keputusan klien) diwajibkan server untuk: reveal saldo penuh, ubah nominal goal, export, delete (`POST .../re-auth` → token sekali pakai 5 mnt).
 - Rate-limit sederhana per IP+sesi; `Cache-Control: no-store` untuk semua API; CORS: same-origin saja (mendasari CSR satu host).
-- Error codes: `VALIDATION`, `UNAUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `STALE`, `OFFLINE_QUEUED` (klien), `RATE_LIMITED`, `SYNC_FAILED`, `PROVIDER_UNAVAILABLE`, `INTERNAL`.
+- Error codes: `VALIDATION`, `UNAUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `STALE`, `OFFLINE_QUEUED` (klien), `RATE_LIMITED`, `SYNC_FAILED`, `PROVIDER_UNAVAILABLE`, `INTERNAL`, dan khusus passkey (R1.1): `PASSKEY_UNAVAILABLE`, `CHALLENGE_EXPIRED`, `CREDENTIAL_UNKNOWN`, `COUNTER_REGRESSION`.
 
 ## Konvensi umum
 - Tanggal: `YYYY-MM-DD`; uang: integer minor (rupiah, tanpa desimal); timezone param `tz=Asia/Jakarta`; list: cursor paging `{items, next_cursor}` + filter `from/to` (lihat specs/17) + text search `q` + `sort/order` (lihat specs/19; nilai `q` mentah tidak masuk log/analytics).
@@ -39,7 +39,21 @@ Kontrak JSON penuh untuk CSR — tipis, idempoten, tanpa PII di log/analytics. P
 - `POST /connections`, `DELETE /connections/:id`, `POST /connections/:id/reconnect`, `GET /sync-runs?source` → `{status: synced|syncing|failed|expired|partial, last_success_ts, error_code}`.
 - Jangan klaim coverage/OAuth scope sebelum verifikasi (D-04). Token-expired → klien tampilkan banner reconnect (spec 09).
 
-## R1.1 — Web Push + VAPID (desain sekarang, implementasi nanti)
+## R1.1 — Passkey / WebAuthn (amandemen 19 Sep 2026; ADR-0001; implementasi GATED sampai ADR §5 diputuskan)
+> Prinsip: passkey = pendamping sesi email (login cepat + re-auth), bukan pengganti. RP ID = domain produksi (nilai final oleh owner). `attestation:"none"`. Migrasi terpisah `db/migrations/002_webauthn.sql`. Semua respons memakai envelope + `X-Request-Id`; `*-verify` menerima `Idempotency-Key`.
+
+| Method & path | Auth | Body → Data | Error |
+|---|---|---|---|
+| `POST /auth/passkey/register-options` | sesi wajib | `{label?}` → `{challenge (base64url 32B), rp:{id,name}, user:{id (base64url user_id_hash), name (email dimasking), displayName}, pubKeyCredParams:[{alg:-7},{alg:-257}], authenticatorSelection:{residentKey:"preferred", userVerification:"required"}, attestation:"none", timeout:60000, excludeCredentials:[{id,type,transports}]}` | `UNAUTHENTICATED`, `RATE_LIMITED` |
+| `POST /auth/passkey/register-verify` | sesi wajib | `{id, rawId, type:"public-key", response:{clientDataJSON, attestationObject, transports?}, label?}` → `{credential_hash, created_at}` | `VALIDATION` (parse), `CHALLENGE_EXPIRED`, `FORBIDDEN` (origin/rpIdHash/UV salah), `CONFLICT` (credential sudah ada) |
+| `POST /auth/passkey/login-options` | tanpa sesi | `{email?}` → `{challenge, rpId, userVerification:"required", allowCredentials?:[...] (kosong bila conditional UI), timeout:60000}` | `RATE_LIMITED` |
+| `POST /auth/passkey/login-verify` | tanpa sesi / sesi (re-auth) | `{id, rawId, type, response:{clientDataJSON, authenticatorData, signature, userHandle?}, purpose?:"login"\|"re-auth"}` → login: `{user_id}` + set session cookie; re-auth: `{re_auth_token, expires_in:300}` | `CHALLENGE_EXPIRED`, `CREDENTIAL_UNKNOWN`, `FORBIDDEN` (signature/origin/UV), `COUNTER_REGRESSION` (kredensial → `suspect`) |
+| `GET /auth/passkey/credentials` | sesi wajib | → `{items:[{credential_hash,label,created_at,last_used_at,status}]}` | `UNAUTHENTICATED` |
+| `DELETE /auth/passkey/credentials/:credential_hash` | sesi + re-auth | → `{revoked:true}` | `FORBIDDEN` (tanpa re-auth), `NOT_FOUND` |
+
+Aturan server: challenge `random_bytes(32)` TTL ≤5 menit sekali pakai, terikat `user_id` untuk register/re-auth; verifikasi `type`, `challenge`, `origin === https://<RP ID>`, `rpIdHash`, flag `UP+UV`, counter monoton; log teredaksi (hash kredensial, tanpa email); rate-limit per IP (120/mnt global) + per user 10/mnt untuk `login-*`. Klien: `src/webauthn.js` hanya memanggil `navigator.credentials.*` bila `isRPConfigured()`; sebelum itu tombol berlabel "Segera".
+
+## R1.1 — Web Push + VAPID (desain sekarang, implementasi nanti; ADR-0002: sender = vendor lib web-push-php via FTP + cron cPanel)
 - Server: generate VAPID pair via `openssl` (EC P-256); public key di `GET /push/vapid-public-key`; private TIDAK keluar server.
 - `POST /push/subscriptions {endpoint, keys{auth,p256dh}, tz, categories[]}`; `DELETE /push/subscriptions/:endpoint_hash`.
 - `POST /push/test` (dev only, re-auth) untuk verifikasi; pengiriman nyata oleh worker PHP saat event relevan + hormati Quiet Hours + kategori mute; payload terenkripsi (RFC 8291) tanpa nominal sensitif.

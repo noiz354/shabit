@@ -9,9 +9,11 @@
 
 import { isOnboardingDone } from "./storage/prefs.js";
 import { track } from "./analytics.js";
+import { openSheet } from "./ui.js";
 
 let deferredPrompt = null;
 let installSheetShown = false;
+let installTracked = false;
 
 export function isStandalone() {
   try {
@@ -30,7 +32,10 @@ export function isIOS() {
 }
 
 // Init PWA install prompt handling
+let inited = false;
 export function initPWAInstall() {
+  if (inited) return; // idempoten: listener window hanya sekali
+  inited = true;
   // beforeinstallprompt — tunda sampai first habit
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
@@ -49,10 +54,11 @@ export function initPWAInstall() {
   });
 
   window.addEventListener("appinstalled", () => {
-    // console.debug("[pwa] appinstalled");
     deferredPrompt = null;
     hideInstallSheet();
-    track("pwa_installed", { source: "prompt" }).catch(() => {});
+    // source: "prompt" sudah dicatat di handler Pasang; di sini hanya install manual (menu browser) — tanpa duplikat
+    if (!installTracked) track("pwa_installed", { source: "manual" }).catch(() => {});
+    installTracked = true;
     try {
       localStorage.setItem("hw:pwa:installed", "1");
     } catch {}
@@ -69,113 +75,84 @@ export function initPWAInstall() {
   }
 }
 
-function createSheetElement(id, innerHTML) {
-  let sheet = document.getElementById(id);
-  if (sheet) return sheet;
+let installApi = null;
 
-  sheet = document.createElement("div");
-  sheet.id = id;
-  sheet.className = "pwa-sheet sheet-bottom";
-  sheet.setAttribute("role", "dialog");
-  sheet.setAttribute("aria-modal", "true");
-  sheet.innerHTML = innerHTML;
-  document.body.appendChild(sheet);
-
-  // scrim
-  let scrim = document.getElementById(`${id}-scrim`);
-  if (!scrim) {
-    scrim = document.createElement("div");
-    scrim.id = `${id}-scrim`;
-    scrim.className = "scrim";
-    scrim.addEventListener("click", () => hideInstallSheet());
-    document.body.appendChild(scrim);
-  }
-
-  return sheet;
-}
-
+/**
+ * Sheet "Pasang HabitWealth?" (spec 15): hanya setelah first habit, via ui.js openSheet (scrim + focus trap + Esc + drag,
+ * fokus kembali ke pemicu, reduced-motion fade). Sebelumnya sheet manual tanpa focus trap.
+ */
 export function showInstallSheet() {
-  if (installSheetShown || isStandalone()) return;
+  if (installSheetShown || isStandalone()) return null;
   installSheetShown = true;
-
-  const sheet = createSheetElement(
-    "pwa-install-sheet",
-    `
-    <div class="sheet-content">
-      <div class="sheet-handle"></div>
-      <h2 class="sheet-title">Pasang HabitWealth?</h2>
-      <p class="sheet-desc">Akses lebih cepat, tetap bisa dipakai offline. Tidak pakai kuota besar.</p>
-      <div class="sheet-actions">
-        <button class="btn btn-secondary" data-action="dismiss">Nanti</button>
-        <button class="btn btn-primary" data-action="install">Pasang</button>
-      </div>
-    </div>
-  `
-  );
-
-  sheet.classList.add("open");
-  sheet.querySelector('[data-action="dismiss"]')?.addEventListener("click", () => {
-    hideInstallSheet();
+  let decided = false;
+  const dismiss = () => {
+    if (decided) return;
+    decided = true;
     try {
       localStorage.setItem("hw:pwa:install-dismissed", "1");
     } catch {}
     track("pwa_dismissed", {}).catch(() => {});
+  };
+  installApi = openSheet({
+    id: "pwa-install-sheet",
+    title: "Pasang HabitWealth?",
+    desc: "Akses lebih cepat, tetap bisa dipakai offline. Tidak pakai kuota besar.",
+    actions: [
+      { label: "Nanti", kind: "secondary", onClick: dismiss },
+      {
+        label: "Pasang",
+        kind: "primary",
+        autofocus: true,
+        onClick: async () => {
+          decided = true;
+          if (deferredPrompt) {
+            try {
+              deferredPrompt.prompt();
+              const choice = await deferredPrompt.userChoice;
+              if (choice && choice.outcome === "accepted") {
+                installTracked = true;
+                track("pwa_installed", { source: "prompt" }).catch(() => {});
+              } else {
+                track("pwa_dismissed", {}).catch(() => {});
+              }
+            } catch {}
+            deferredPrompt = null;
+          }
+        },
+      },
+    ],
+    onClose: (reason) => {
+      installSheetShown = false;
+      installApi = null;
+      if (reason !== "action") dismiss(); // scrim/Esc/drag = "Nanti"
+    },
   });
-  sheet.querySelector('[data-action="install"]')?.addEventListener("click", async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
-      // console.debug("[pwa] userChoice", choice);
-      if (choice.outcome === "accepted") {
-        track("pwa_installed", { source: "prompt" }).catch(() => {});
-      } else {
-        track("pwa_dismissed", {}).catch(() => {});
-      }
-      deferredPrompt = null;
-    }
-    hideInstallSheet();
-  });
-
-  // Focus trap
-  const firstBtn = sheet.querySelector("button");
-  if (firstBtn) firstBtn.focus();
+  if (!installApi) installSheetShown = false;
+  return installApi;
 }
 
 export function hideInstallSheet() {
-  const sheet = document.getElementById("pwa-install-sheet");
-  const scrim = document.getElementById("pwa-install-sheet-scrim");
-  if (sheet) {
-    sheet.classList.add("exiting");
-    setTimeout(() => {
-      sheet.classList.remove("open", "exiting");
-      sheet.remove();
-    }, 300);
-  }
-  if (scrim) {
-    scrim.remove();
-  }
+  if (installApi) installApi.close("hide");
   installSheetShown = false;
 }
 
 export function showIOSInstallInstruction() {
-  if (isStandalone()) return;
-  const sheet = createSheetElement(
-    "pwa-ios-sheet",
-    `
-    <div class="sheet-content">
-      <div class="sheet-handle"></div>
-      <h2 class="sheet-title">Pasang di iPhone</h2>
-      <p class="sheet-desc">Tap tombol Bagikan <span aria-hidden="true">⎙</span> di Safari, lalu pilih "Add to Home Screen".</p>
-      <div class="sheet-actions">
-        <button class="btn btn-primary" data-action="close">Mengerti</button>
-      </div>
-    </div>
-  `
-  );
-  sheet.classList.add("open");
-  sheet.querySelector('[data-action="close"]')?.addEventListener("click", () => {
-    sheet.remove();
-    document.getElementById("pwa-ios-sheet-scrim")?.remove();
+  if (isStandalone()) return null;
+  return openSheet({
+    id: "pwa-ios-sheet",
+    title: "Pasang di iPhone",
+    build: (body) => {
+      const p = document.createElement("p");
+      p.className = "sheet-desc";
+      p.append(document.createTextNode("Tap tombol Bagikan "));
+      const ic = document.createElement("span");
+      ic.setAttribute("aria-hidden", "true");
+      ic.textContent = "⎙";
+      p.appendChild(ic);
+      p.append(document.createTextNode(" di Safari, lalu pilih “Add to Home Screen”."));
+      body.appendChild(p);
+    },
+    actions: [{ label: "Mengerti", kind: "primary", autofocus: true }],
   });
 }
 
@@ -189,10 +166,13 @@ export function initOfflineBanner() {
     offlineBanner.className = "offline-banner";
     offlineBanner.setAttribute("role", "status");
     offlineBanner.setAttribute("aria-live", "polite");
-    offlineBanner.innerHTML = `
-      <span class="offline-icon" aria-hidden="true">◍</span>
-      <span>Kamu offline — perubahan disimpan, terkirim otomatis</span>
-    `;
+    const icon = document.createElement("span");
+    icon.className = "offline-icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = "◍";
+    const text = document.createElement("span");
+    text.textContent = "Kamu offline — perubahan disimpan, terkirim otomatis";
+    offlineBanner.append(icon, text);
     document.body.appendChild(offlineBanner);
     // Also trigger outbox flush check when back online
   }
@@ -247,7 +227,7 @@ export function initSWUpdatePrompt() {
   });
 }
 
-function showUpdatePrompt(reg) {
+export function showUpdatePrompt(reg) {
   let promptEl = document.getElementById("pwa-update-prompt");
   if (promptEl) return;
 
@@ -255,27 +235,35 @@ function showUpdatePrompt(reg) {
   promptEl.id = "pwa-update-prompt";
   promptEl.className = "update-prompt";
   promptEl.setAttribute("role", "alert");
-  promptEl.innerHTML = `
-    <div class="update-content">
-      <span>Versi baru tersedia</span>
-      <button class="btn btn-primary btn-small" data-action="update">Muat versi baru</button>
-      <button class="btn btn-flat btn-small" data-action="dismiss">Nanti</button>
-    </div>
-  `;
+  const content = document.createElement("div");
+  content.className = "update-content";
+  const label = document.createElement("span");
+  label.textContent = "Versi baru tersedia";
+  const updateBtn = document.createElement("button");
+  updateBtn.type = "button";
+  updateBtn.className = "btn btn-primary btn-small";
+  updateBtn.dataset.action = "update";
+  updateBtn.textContent = "Muat versi baru";
+  const dismissBtn = document.createElement("button");
+  dismissBtn.type = "button";
+  dismissBtn.className = "btn btn-flat btn-small";
+  dismissBtn.dataset.action = "dismiss";
+  dismissBtn.textContent = "Nanti";
+  content.append(label, updateBtn, dismissBtn);
+  promptEl.appendChild(content);
   document.body.appendChild(promptEl);
 
-  promptEl.querySelector('[data-action="update"]')?.addEventListener("click", async () => {
+  // Spec 15: versi baru hanya dimuat saat user tap (SKIP_WAITING → controllerchange → reload sekali)
+  updateBtn.addEventListener("click", () => {
     if (reg && reg.waiting) {
       reg.waiting.postMessage({ type: "SKIP_WAITING" });
     } else {
-      // fallback: reload
       window.location.reload();
     }
     promptEl.remove();
   });
-  promptEl.querySelector('[data-action="dismiss"]')?.addEventListener("click", () => {
-    promptEl.remove();
-  });
+  dismissBtn.addEventListener("click", () => promptEl.remove());
+  return promptEl;
 }
 
 // Mark first habit done — triggers install prompt logic

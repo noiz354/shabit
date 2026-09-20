@@ -90,26 +90,53 @@ function buildIndexMainThread(docs) {
   return { tokens: tokenMap, docs: docMap };
 }
 
-function searchMainThread(q, index) {
-  if (!q || q.trim().length < MIN_CHARS) return [];
-  const lowerQ = q.toLowerCase().replace(/\./g, "");
-  const queryTokens = lowerQ.split(/[\s,;]+/).filter(Boolean);
-  const scores = {};
-
+// Kualitas kecocokan per token query (spec 19: exact > prefix > substring), dihitung dari teks dokumen —
+// bukan dari akumulasi n-gram (yang membuat "kopitiam" mengalahkan "kopi").
+function docText(doc) {
+  return [doc.title, doc.note, doc.category, doc.amount ? String(doc.amount).replace(/\./g, "") : "", doc.source, doc.merchant]
+    .filter(Boolean).join(" ").toLowerCase().replace(/\./g, "");
+}
+function matchQuality(doc, qt) {
+  const text = docText(doc);
+  if (!text) return 0;
+  const words = text.split(/[\s,;]+/).filter(Boolean);
+  if (words.includes(qt)) return 3;
+  if (words.some((w) => w.startsWith(qt))) return 2;
+  if (text.includes(qt)) return 1;
+  return 0;
+}
+function scoreCandidates(queryTokens, index) {
+  const { tokens, docs } = index;
+  const candidates = new Set();
   for (const qt of queryTokens) {
-    for (const [token, ids] of Object.entries(index.tokens)) {
-      if (token.includes(qt) || qt.includes(token)) {
-        for (const id of ids) {
-          scores[id] = (scores[id] || 0) + (token === qt ? 3 : token.startsWith(qt) ? 2 : 1);
-        }
-      }
+    for (const [token, ids] of Object.entries(tokens)) {
+      if (token === qt || token.startsWith(qt) || token.includes(qt)) ids.forEach((id) => candidates.add(id));
     }
   }
+  const results = [];
+  for (const id of candidates) {
+    const doc = docs[id];
+    if (!doc) continue;
+    let score = 0;
+    for (const qt of queryTokens) score += matchQuality(doc, qt);
+    if (score > 0) results.push({ id, score, doc, updatedAt: doc.updatedAt || 0 });
+  }
+  return results.sort((a, b) => b.score - a.score || b.updatedAt - a.updatedAt);
+}
 
-  return Object.entries(scores)
-    .map(([id, score]) => ({ id, score, doc: index.docs[id], updatedAt: index.docs[id]?.updatedAt || 0 }))
-    .sort((a, b) => b.score - a.score || b.updatedAt - a.updatedAt)
-    .slice(0, MAX_RESULTS);
+/**
+ * Normalisasi query — HARUS identik dengan `search()` di workers/search-indexer.js (paritas jalur worker vs main thread):
+ * lowercase, titik ribuan dibuang, awalan "rp" dibuang ("Rp10.000" → "10000"), pisah spasi/koma/titik-koma.
+ */
+export function normalizeQuery(q) {
+  return String(q || "").toLowerCase().replace(/\./g, "").replace(/rp/g, "").trim().split(/[\s,;]+/).filter(Boolean);
+}
+
+export function searchMainThread(q, index) {
+  if (!q || q.trim().length < MIN_CHARS) return [];
+  const queryTokens = normalizeQuery(q);
+  if (!queryTokens.length) return [];
+  return scoreCandidates(queryTokens, index).slice(0, MAX_RESULTS);
 }
 
 export async function searchGlobal(q) {
@@ -149,73 +176,108 @@ export async function searchGlobal(q) {
   }
 }
 
-function highlightMatch(text, q) {
-  if (!q || !text) return text;
-  try {
-    const esc = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(`(${esc})`, "gi");
-    const safe = String(text).replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    return safe.replace(regex, "<mark>$1</mark>");
-  } catch {
-    return text;
+/**
+ * Highlight <mark> berbasis DOM (spec 19): teks dipecah per kecocokan (case-insensitive) → text node + <mark>.
+ * Tidak memakai innerHTML, jadi markup di judul/catatan pengguna tidak pernah dieksekusi.
+ */
+export function renderHighlighted(target, text, q) {
+  const str = String(text ?? "");
+  target.textContent = "";
+  const needle = String(q || "").trim();
+  if (!needle) {
+    target.appendChild(document.createTextNode(str));
+    return target;
   }
+  const lower = str.toLowerCase();
+  const n = needle.toLowerCase();
+  let i = 0;
+  let idx = lower.indexOf(n, i);
+  while (idx !== -1) {
+    if (idx > i) target.appendChild(document.createTextNode(str.slice(i, idx)));
+    const mark = document.createElement("mark");
+    mark.textContent = str.slice(idx, idx + n.length);
+    target.appendChild(mark);
+    i = idx + n.length;
+    idx = lower.indexOf(n, i);
+  }
+  if (i < str.length) target.appendChild(document.createTextNode(str.slice(i)));
+  return target;
+}
+
+function h(tag, className, text) {
+  const e = document.createElement(tag);
+  if (className) e.className = className;
+  if (text !== undefined) e.textContent = text;
+  return e;
 }
 
 // UI: search box + bottom-sheet full (mobile) / panel kanan (≥600dp)
 export function createSearchUI(container, options = {}) {
   const { onResultClick } = options;
 
-  const wrapper = document.createElement("div");
-  wrapper.className = "search-ui";
-  wrapper.innerHTML = `
-    <div class="search-box" role="search">
-      <input type="search" placeholder="Cari habit, transaksi, budget, bantuan..." aria-label="Cari" role="searchbox" aria-controls="search-results" style="width:100%;height:48px;border-radius:24px;border:1px solid #E0E0E0;padding:0 16px 0 44px;background:#EEEEEE" />
-      <span style="position:absolute;left:16px;top:50%;transform:translateY(-50%)" aria-hidden="true">🔍</span>
-    </div>
-    <div class="search-history" style="margin-top:12px"></div>
-    <div class="search-tabs" style="display:flex;gap:8px;margin-top:12px;overflow:auto"></div>
-    <div id="search-results" class="search-results" style="margin-top:12px" aria-live="polite"></div>
-  `;
-
-  const input = wrapper.querySelector('input[type="search"]');
-  const historyEl = wrapper.querySelector(".search-history");
-  const tabsEl = wrapper.querySelector(".search-tabs");
-  const resultsEl = wrapper.querySelector("#search-results");
+  const wrapper = h("div", "search-ui");
+  const box = h("div", "search-box");
+  box.setAttribute("role", "search");
+  const input = h("input", "search-input");
+  input.type = "search";
+  input.placeholder = "Cari habit, transaksi, budget, bantuan...";
+  input.setAttribute("aria-label", "Cari");
+  input.setAttribute("aria-controls", "search-results");
+  input.autocomplete = "off";
+  const icon = h("span", "search-icon", "🔍");
+  icon.setAttribute("aria-hidden", "true");
+  box.append(icon, input);
+  const historyEl = h("div", "search-history");
+  const tabsEl = h("div", "segmented search-tabs");
+  tabsEl.setAttribute("role", "group");
+  tabsEl.setAttribute("aria-label", "Cakupan pencarian");
+  const resultsEl = h("div", "search-results");
+  resultsEl.id = "search-results";
+  resultsEl.setAttribute("aria-live", "polite");
+  wrapper.append(box, historyEl, tabsEl, resultsEl);
 
   let activeTab = "semua";
+  let lastGrouped = null;
 
   function renderHistory() {
+    historyEl.textContent = "";
     const hist = getSearchHistory();
     if (!hist.length) {
-      historyEl.innerHTML = `<p class="placeholder" style="font-size:12px">Saran cepat: kopi, listrik, air, jalan, baca</p>`;
+      historyEl.appendChild(h("p", "placeholder text-sm", "Saran cepat: kopi, listrik, air, jalan, baca"));
       return;
     }
-    historyEl.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:500">Riwayat</span><button class="btn btn-flat btn-small" data-action="clear-history">Hapus semua</button></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-        ${hist.map((q) => `<span style="display:inline-flex;align-items:center;gap:4px;background:#F6F6F6;border-radius:16px;padding:4px 12px;font-size:12px">${q} <button data-remove="${q}" aria-label="Hapus ${q}" style="border:none;background:none;cursor:pointer">×</button></span>`).join("")}
-      </div>
-    `;
-
-    historyEl.querySelector('[data-action="clear-history"]')?.addEventListener("click", () => {
+    const head = h("div", "row-between");
+    head.appendChild(h("span", "label-sm", "Riwayat"));
+    const clearBtn = h("button", "btn btn-flat btn-small", "Hapus semua");
+    clearBtn.type = "button";
+    clearBtn.dataset.action = "clear-history";
+    clearBtn.addEventListener("click", () => {
       clearSearchHistory();
       renderHistory();
-      track("search_history_cleared", {}).catch(()=>{});
+      track("search_history_cleared", {}).catch(() => {});
     });
-    historyEl.querySelectorAll("[data-remove]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const q = btn.dataset.remove;
-        removeHistoryItem(q);
-        renderHistory();
-      });
+    head.appendChild(clearBtn);
+    const chips = h("div", "chip-row search-chips");
+    hist.forEach((q) => {
+      const chip = h("span", "search-chip");
+      const use = h("button", "search-chip-label", q);
+      use.type = "button";
+      use.setAttribute("aria-label", `Cari lagi ${q}`);
+      use.addEventListener("click", () => { input.value = q; onInput(); input.focus(); });
+      const rm = h("button", "search-chip-remove", "×");
+      rm.type = "button";
+      rm.dataset.remove = q;
+      rm.setAttribute("aria-label", `Hapus ${q}`);
+      rm.addEventListener("click", () => { removeHistoryItem(q); renderHistory(); });
+      chip.append(use, rm);
+      chips.appendChild(chip);
     });
+    historyEl.append(head, chips);
   }
 
   function renderTabs(grouped) {
-    if (!grouped) {
-      tabsEl.innerHTML = "";
-      return;
-    }
+    tabsEl.textContent = "";
+    if (!grouped) return;
     const tabs = [
       { key: "semua", label: `Semua (${grouped.semua.length})` },
       { key: "habit", label: `Habit (${grouped.habit.length})` },
@@ -223,62 +285,75 @@ export function createSearchUI(container, options = {}) {
       { key: "budget", label: `Budget (${grouped.budget.length})` },
       { key: "bantuan", label: `Bantuan (${grouped.bantuan.length})` },
     ];
-    tabsEl.innerHTML = tabs.map((t) => `<button class="btn btn-secondary btn-small ${activeTab===t.key?'active':''}" data-tab="${t.key}" style="${activeTab===t.key?'background:#0381FE;color:#fff':''}">${t.label}</button>`).join("");
-
-    tabsEl.querySelectorAll("[data-tab]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        activeTab = btn.dataset.tab;
+    tabs.forEach((t) => {
+      const b = h("button", "btn btn-secondary btn-small", t.label);
+      b.type = "button";
+      b.dataset.tab = t.key;
+      b.setAttribute("aria-pressed", String(activeTab === t.key));
+      b.addEventListener("click", () => {
+        activeTab = t.key;
         renderTabs(grouped);
         renderResults(grouped[activeTab] || [], lastQuery);
       });
+      tabsEl.appendChild(b);
     });
   }
 
   function renderResults(results, q) {
-    if (!q || q.length < MIN_CHARS) {
-      resultsEl.innerHTML = "";
-      return;
-    }
+    resultsEl.textContent = "";
+    if (!q || q.length < MIN_CHARS) return;
 
     if (!results.length) {
-      resultsEl.innerHTML = `<p class="placeholder">Tidak ada hasil untuk '${q}' <button class="btn btn-flat btn-small" onclick="document.querySelector('.search-ui input').value='';document.querySelector('.search-ui input').dispatchEvent(new Event('input'))">Hapus pencarian</button></p>`;
-      // SR announce
+      const p = h("p", "placeholder search-empty");
+      p.appendChild(document.createTextNode(`Tidak ada hasil untuk '${q}' `));
+      const clear = h("button", "btn btn-flat btn-small", "Hapus pencarian");
+      clear.type = "button";
+      clear.addEventListener("click", () => { input.value = ""; onInput(); input.focus(); });
+      p.appendChild(clear);
+      resultsEl.appendChild(p);
       announce(`Tidak ada hasil untuk ${q}`);
       return;
     }
 
-    const offlineBadge = !navigator.onLine ? `<span style="font-size:11px;background:#FFB74D;color:#000;border-radius:8px;padding:2px 6px;margin-left:8px">Hasil offline — data sampai ${new Date().toLocaleTimeString("id-ID")}</span>` : "";
+    const meta = h("p", "search-meta", `${results.length} hasil untuk '${q}'`);
+    if (!navigator.onLine) {
+      // Non-color cue: ikon + teks (bukan warna saja)
+      const badge = h("span", "search-offline");
+      const ic = h("span", "", "📴 ");
+      ic.setAttribute("aria-hidden", "true");
+      badge.append(ic, document.createTextNode(`Hasil offline — data sampai ${new Date().toLocaleTimeString("id-ID")}`));
+      meta.appendChild(badge);
+    }
+    resultsEl.appendChild(meta);
 
-    resultsEl.innerHTML = `
-      <p style="font-size:12px;margin-bottom:8px">${results.length} hasil untuk '${q}'${offlineBadge}</p>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        ${results.map((r) => {
-          const doc = r.doc;
-          const title = highlightMatch(doc.title || doc.id, q);
-          const note = highlightMatch(doc.note || doc.category || "", q);
-          return `<div class="search-result" data-id="${doc.id}" data-type="${doc.type}" style="background:#F6F6F6;border-radius:16px;padding:12px;cursor:pointer">
-            <div style="font-size:14px;font-weight:500">${title}</div>
-            <div style="font-size:12px;color:#666">${note} • <span style="font-size:11px">${doc.type}</span></div>
-          </div>`;
-        }).join("")}
-      </div>
-    `;
-
-    resultsEl.querySelectorAll(".search-result").forEach((el) => {
-      el.addEventListener("click", () => {
-        const id = el.dataset.id;
-        const type = el.dataset.type;
+    const list = h("div", "search-list");
+    results.forEach((r) => {
+      const doc = r.doc;
+      const item = h("button", "search-result");
+      item.type = "button";
+      item.dataset.id = doc.id;
+      item.dataset.type = doc.type;
+      const title = h("div", "search-result-title");
+      renderHighlighted(title, doc.title || doc.id, q);
+      const sub = h("div", "search-result-sub");
+      const note = h("span", "");
+      renderHighlighted(note, doc.note || doc.category || "", q);
+      sub.append(note, document.createTextNode(" • "), h("span", "search-result-type", doc.type));
+      item.append(title, sub);
+      item.addEventListener("click", () => {
+        const { id, type } = item.dataset;
         if (onResultClick) onResultClick({ id, type });
         else {
-          // deep-link
           if (type === "habit") location.hash = `#/habit/${id}`;
           else if (type === "uang") location.hash = `#/uang/${id}`;
           else if (type === "budget") location.hash = `#/uang?cat=${encodeURIComponent(id)}`;
           else if (type === "bantuan") location.hash = `#/pengaturan`;
         }
-        track("search_result_opened", { scope: type }).catch(()=>{});
+        track("search_result_opened", { scope: type }).catch(() => {});
       });
+      list.appendChild(item);
     });
+    resultsEl.appendChild(list);
 
     // SR announce once (debounced, not per keystroke)
     announce(`${results.length} hasil untuk ${q}`);
@@ -290,12 +365,10 @@ export function createSearchUI(container, options = {}) {
     announceTimer = setTimeout(() => {
       let live = document.getElementById("hw-search-live");
       if (!live) {
-        live = document.createElement("div");
+        live = h("div", "sr-only");
         live.id = "hw-search-live";
         live.setAttribute("aria-live", "polite");
         live.setAttribute("aria-atomic", "true");
-        live.style.position = "absolute";
-        live.style.left = "-9999px";
         document.body.appendChild(live);
       }
       live.textContent = msg;
@@ -310,22 +383,20 @@ export function createSearchUI(container, options = {}) {
     debounceTimer = setTimeout(async () => {
       if (q.length < MIN_CHARS) {
         renderHistory();
-        tabsEl.innerHTML = "";
-        resultsEl.innerHTML = "";
+        renderTabs(null);
+        renderResults([], q);
         return;
       }
-
-      // Track without raw q
-      track("search_executed", { scope: activeTab, result_count: 0, char_len: q.length, offline: !navigator.onLine }).catch(()=>{});
-
       const res = await searchGlobal(q);
+      lastGrouped = res.grouped || null;
+      // Track tanpa q mentah, dengan result_count nyata (sebelumnya selalu 0 karena dikirim sebelum hasil ada)
+      track("search_executed", { scope: activeTab, result_count: res.results ? res.results.length : 0, char_len: q.length, offline: !navigator.onLine }).catch(() => {});
       if (res.grouped) {
         renderTabs(res.grouped);
         renderResults(res.grouped[activeTab] || res.results, q);
-        // Update history
         addSearchHistory(q);
-        // Don't send q raw to analytics
       } else {
+        renderTabs(null);
         renderResults([], q);
       }
     }, DEBOUNCE_MS);
@@ -337,25 +408,21 @@ export function createSearchUI(container, options = {}) {
       input.value = "";
       onInput();
       input.blur();
-      // focus back to trigger
       const trigger = document.querySelector("[data-search-trigger]");
       if (trigger) trigger.focus();
     }
   });
 
-  // Initial history
   renderHistory();
-
-  // Build index in idle
   runIdle(() => buildIndexFromIDB(), { timeout: 2000 });
-
   container.appendChild(wrapper);
 
-  // Public API
   return {
     focus: () => input.focus(),
     clear: () => { input.value = ""; onInput(); },
     destroy: () => wrapper.remove(),
+    get activeTab() { return activeTab; },
+    get grouped() { return lastGrouped; },
   };
 }
 
@@ -363,4 +430,6 @@ export const searchHelpers = {
   searchGlobal,
   createSearchUI,
   buildIndexFromIDB,
+  normalizeQuery,
+  renderHighlighted,
 };

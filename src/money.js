@@ -12,7 +12,7 @@ import { getPrefs } from "./storage/prefs.js";
 const STORE = "transactions";
 const BUDGET_STORE = "budgets";
 
-function formatRupiah(amount) {
+export function formatRupiah(amount) {
   // amount integer minor (rupiah, tanpa desimal)
   try {
     return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(amount).replace("IDR", "Rp").replace(/\s/g, "");
@@ -21,11 +21,11 @@ function formatRupiah(amount) {
   }
 }
 
-function maskRupiah() {
+export function maskRupiah() {
   return "Rp••••••";
 }
 
-function maskAccount(account) {
+export function maskAccount(account) {
   // BCA •••• 4821
   if (!account) return "••••";
   const last4 = account.slice(-4);
@@ -45,6 +45,14 @@ export async function requestReAuth() {
   reAuthSession = { expiresAt: Date.now() + 5 * 60 * 1000 };
   try {
     localStorage.setItem("hw:re-auth:expires", String(reAuthSession.expiresAt));
+  } catch {}
+  return true;
+}
+
+export function clearReAuth() {
+  reAuthSession = null;
+  try {
+    localStorage.removeItem("hw:re-auth:expires");
   } catch {}
   return true;
 }
@@ -92,6 +100,22 @@ export async function listTransactions(filters = {}) {
   }
 }
 
+/**
+ * T11: saldo tercatat manual (semua waktu) — Σ pemasukan − Σ pengeluaran dari catatan pengguna sendiri.
+ * Bukan saldo bank/agregator; "transfer" diabaikan (netral). Nilai mock Wave 2 (Rp1.250.000) tidak dipakai lagi.
+ */
+export async function getManualBalance() {
+  const txs = await listTransactions();
+  let income = 0;
+  let expense = 0;
+  for (const t of txs) {
+    const amt = Number(t.amount) || 0;
+    if (t.kind === "income") income += amt;
+    else if (t.kind === "expense") expense += amt;
+  }
+  return { income, expense, net: income - expense, count: txs.length };
+}
+
 export async function createTransaction(data) {
   const id = data.id || `tx_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
   const tx = {
@@ -106,6 +130,17 @@ export async function createTransaction(data) {
     updatedAt: Date.now(),
   };
 
+  // T12: ambang budget 80/100 — hitung pct sebelum & sesudah (sekali per kategori/bulan, dedup di notify)
+  const month = tx.date.slice(0, 7);
+  let pctBefore = null;
+  if (tx.kind === "expense") {
+    try {
+      const st = await getBudgetStatus(month);
+      const b = st.find((x) => x.category === tx.category);
+      if (b) pctBefore = b.pct;
+    } catch {}
+  }
+
   await idbPut(STORE, tx);
 
   try {
@@ -114,7 +149,26 @@ export async function createTransaction(data) {
 
   track("transaction_created", { kind: tx.kind, category: tx.category, has_note: !!tx.note }).catch(() => {});
 
+  if (pctBefore !== null) {
+    try {
+      const st = await getBudgetStatus(month);
+      const a = st.find((x) => x.category === tx.category);
+      if (a) {
+        const { checkBudgetThresholds } = await import("./notify.js");
+        await checkBudgetThresholds(tx.category, month, { before: pctBefore, after: a.pct });
+      }
+    } catch {}
+  }
+
   return tx;
+}
+
+export async function getTransaction(id) {
+  try {
+    return await idbGet(STORE, id);
+  } catch {
+    return null;
+  }
 }
 
 export async function updateTransaction(id, patch) {
@@ -185,9 +239,11 @@ export const moneyHelpers = {
   maskAccount,
   isReAuthed,
   requestReAuth,
+  clearReAuth,
   checkReAuthFromStorage,
   getDisplayAmount,
   listTransactions,
+  getTransaction,
   createTransaction,
   updateTransaction,
   deleteTransaction,
