@@ -41,6 +41,7 @@ One UI: Primary `#0381FE`, 24dp margin, radius 18 btn/16 card/26 dialog/24 pill,
 - Always: spec dulu (Addy Osmani SPECIFY→PLAN→TASKS→IMPLEMENT, gated); skill routing per `docs/agent-skills-map.md` (`frontend-ui-engineering` untuk UI, `source-driven-development` untuk verifikasi docs, `verification-before-completion` sebelum klaim DONE); update TODO+PROGRESS tiap tugas; reduced-motion; re-auth aksi sensitif; non-color cues.
 - Ask first: skema DB final, endpoint PHP baru, klaim provider/legal/vendor, premium/paywall.
 - Never: transfer/custody/auto-debit; klaim Plaid/Nordigen/E2EE/pasal UU/retensi final; SSR/Node di shared host; PII di analytics/log; hardcode warna/durasi di fitur; fade global; `isLoading` saja; `alert()/confirm()/prompt()` (pakai `src/ui.js` sheet/toast); inline style visual di views (class + token).
+- Checklist permanen sebelum commit yang menyentuh event analytics (syarat merge PR #2 (b), 19 Sep 2026): nama event **wajib** ditambah di **empat** tempat sekaligus — `src/analytics.js` `ALLOWED_EVENTS` + `public_html/api/v1/analytics.php` + `index.php` + `reports.php` (`$allowed`) — **dan** didokumentasikan di `specs/05-analytics.md` (registry tunggal). Dijaga `tests/guardrails.test.js` (paritas set identik + terdokumentasi); jangan pernah melonggarkan tes itu. Chart/SVG hand-rolled juga token-only (class di `app.css`; hex hanya `TOKEN_FALLBACK` di `charts.js`).
 
 ## Success
 First habit <3mnt; LCP<2.5s/CLS<0.1 diukur; Gate A–E + kill-criteria lolos dengan evidence.
