@@ -100,6 +100,22 @@ export async function listTransactions(filters = {}) {
   }
 }
 
+/**
+ * T11: saldo tercatat manual (semua waktu) — Σ pemasukan − Σ pengeluaran dari catatan pengguna sendiri.
+ * Bukan saldo bank/agregator; "transfer" diabaikan (netral). Nilai mock Wave 2 (Rp1.250.000) tidak dipakai lagi.
+ */
+export async function getManualBalance() {
+  const txs = await listTransactions();
+  let income = 0;
+  let expense = 0;
+  for (const t of txs) {
+    const amt = Number(t.amount) || 0;
+    if (t.kind === "income") income += amt;
+    else if (t.kind === "expense") expense += amt;
+  }
+  return { income, expense, net: income - expense, count: txs.length };
+}
+
 export async function createTransaction(data) {
   const id = data.id || `tx_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
   const tx = {

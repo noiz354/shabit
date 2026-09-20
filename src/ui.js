@@ -5,6 +5,7 @@
  *  - openSheet({...})              → bottom sheet generik (scrim + handle + focus trap + Esc + drag-to-dismiss)
  *  - confirmSheet({destructive})   → Promise<boolean>; destruktif = tombol --negative + ikon (non-color cue)
  *  - infoSheet({title, desc})      → Promise<void>
+ *  - switchRow({id,label,...})     → baris switch One UI (label.switch > input[role=switch] + .track + .thumb; auth.css)
  * Motion: sheet dari bawah (sheet-in/out), reduced-motion fade (motion.css). Fokus kembali ke pemicu.
  */
 
@@ -279,4 +280,70 @@ export function chooseSheet(o = {}) {
   });
 }
 
-export const ui = { showToast, hideToast, openSheet, confirmSheet, infoSheet, chooseSheet };
+/**
+ * Baris switch bersama (T11/T12). Struktur mengikuti auth.css `.switch`:
+ * <label class="switch"><input type=checkbox role=switch id=…><span class=track><span class=thumb></label>
+ * (bug visual T12: <button class="switch"> tanpa .track/.thumb → track tak tampak; kini seragam di sini.)
+ * @param {{id:string,label:string,desc?:string,note?:string,checked?:boolean,disabled?:boolean,onChange?:(v:boolean)=>any,className?:string}} o
+ */
+export function switchRow(o = {}) {
+  const { id, label, desc, note, checked = false, disabled = false, onChange, className = "" } = o;
+  const row = document.createElement("div");
+  row.className = `consent-card notif-row${className ? ` ${className}` : ""}`;
+  const text = document.createElement("div");
+  text.className = "consent-text";
+  const lab = document.createElement("label");
+  lab.className = "consent-title";
+  lab.textContent = label;
+  lab.htmlFor = id;
+  text.appendChild(lab);
+  let descId = null;
+  if (desc) {
+    const d = document.createElement("div");
+    d.className = "consent-desc";
+    d.id = `${id}-desc`;
+    d.textContent = desc;
+    descId = d.id;
+    text.appendChild(d);
+  }
+  if (note) {
+    const n = document.createElement("div");
+    n.className = "status-line mt-8";
+    n.textContent = note;
+    text.appendChild(n);
+  }
+  const sw = document.createElement("label");
+  sw.className = "switch";
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.id = id;
+  input.setAttribute("role", "switch");
+  input.checked = !!checked;
+  input.setAttribute("aria-checked", String(!!checked));
+  input.setAttribute("aria-label", label);
+  if (descId) input.setAttribute("aria-describedby", descId);
+  if (disabled) {
+    input.disabled = true;
+    input.setAttribute("aria-disabled", "true");
+  }
+  input.addEventListener("change", async () => {
+    const next = input.checked;
+    input.setAttribute("aria-checked", String(next));
+    if (typeof onChange !== "function") return;
+    try {
+      await onChange(next);
+    } catch {
+      input.checked = !next;
+      input.setAttribute("aria-checked", String(!next));
+    }
+  });
+  const track = document.createElement("span");
+  track.className = "track";
+  const thumb = document.createElement("span");
+  thumb.className = "thumb";
+  sw.append(input, track, thumb);
+  row.append(text, sw);
+  return row;
+}
+
+export const ui = { showToast, hideToast, openSheet, confirmSheet, infoSheet, chooseSheet, switchRow };

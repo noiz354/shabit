@@ -45,6 +45,8 @@ const DEFAULT_PREFS = {
     sound: false, // OFF default per spec 04
   },
   installPromptDismissed: false,
+  // T11: insight opt-in default OFF; perayaan rate-limit per habit/milestone
+  insights: { optIn: false, sources: { habits: true, transactions: true }, hideSensitive: false, celebrations: { never: false, shown: {} } },
 };
 
 const DEFAULT_RANGE = {

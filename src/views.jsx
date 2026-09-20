@@ -356,7 +356,7 @@ function showAddTransactionSheet(onCreated) {
 }
 
 // ---------- Re-auth helper (spec 07/09): jalankan aksi sensitif setelah re-auth ----------
-async function withReAuth(action, { reason = "Aksi ini butuh verifikasi ulang." } = {}) {
+export async function withReAuth(action, { reason = "Aksi ini butuh verifikasi ulang." } = {}) {
   if (!isReAuthed()) {
     const ok = await confirmSheet({ title: "Verifikasi ulang", desc: `${reason} Sesi verifikasi berlaku 5 menit.`, confirmLabel: "Verifikasi", cancelLabel: "Batal" });
     if (!ok) return null;
@@ -459,6 +459,7 @@ export function Beranda(root, ctx = {}) {
 
     const actions = el("div", "btn-row wrap mt-16");
     actions.append(
+      btn("Insight & Celengan", "btn btn-secondary btn-small insight-link", () => { location.hash = "#/insight"; }),
       btn("Bagikan Streak", "btn btn-secondary btn-small", () => shareStreakCard({ streakDays: bestStreak }).catch(() => {})),
       btn("Bacakan Ringkasan", "btn btn-secondary btn-small", () => speak(`Ringkasan ${formatRangeLabel(range)}: ${habits.length} habit, ${percent} persen selesai hari ini.`, { lang: "id-ID" })),
       btn("Cetak", "btn btn-secondary btn-small", () => printReport()),
@@ -564,6 +565,8 @@ export function Habit(root, ctx = {}) {
             done = true;
             h.streak = (h.streak || 0) + 1;
             showToast("Selesai! Streak bertambah.", { tone: "success", actionLabel: "Batal", onAction: () => toggle.click() });
+            // T11: StreakCelebration 7/30/100 (lazy; 1× per habit per milestone; bisa dimatikan)
+            import("./views-insight.jsx").then((m) => m.maybeCelebrate({ habitId: h.id, streak: h.streak, habitTitle: h.title })).catch(() => {});
           } else {
             await undoComplete(h.id, today);
             done = false;
@@ -640,10 +643,20 @@ export function Uang(root, ctx = {}) {
     const donutContainer = el("div", "chart-card chart-240 mt-16");
     container.append(budgetWrap, feed, donutContainer);
 
-    function renderBalance() {
+    async function renderBalance() {
+      // T11: saldo tercatat manual (Σ pemasukan − Σ pengeluaran − celengan virtual) menggantikan nilai mock Wave 2
+      let bal = { available: 0, goals: 0 };
+      try {
+        const { getRecordedBalance } = await import("./insight.js");
+        bal = await getRecordedBalance();
+      } catch {}
       balance.innerHTML = "";
-      const strong = el("strong", "", getDisplayAmount(1250000));
-      balance.append(document.createTextNode("Saldo: "), strong, eye);
+      const strong = el("strong", "", getDisplayAmount(bal.available));
+      balance.append(document.createTextNode("Saldo tercatat (manual): "), strong, eye);
+      if (bal.goals > 0) {
+        const goalLink = btn(`Celengan virtual: ${getDisplayAmount(bal.goals)} ›`, "btn btn-flat btn-small", () => { location.hash = "#/insight"; });
+        balance.appendChild(goalLink);
+      }
       eye.textContent = isReAuthed() ? "🙈" : "👁️";
       eye.setAttribute("aria-label", isReAuthed() ? "Sembunyikan saldo" : "Tampilkan saldo (verifikasi ulang)");
       eye.setAttribute("aria-pressed", String(!!isReAuthed()));
@@ -664,7 +677,7 @@ export function Uang(root, ctx = {}) {
 
     async function loadMoney() {
       checkReAuthFromStorage();
-      renderBalance();
+      await renderBalance();
       // Budget status
       budgetWrap.innerHTML = "";
       budgetWrap.appendChild(skeleton("card"));
@@ -810,6 +823,10 @@ export function Pengaturan(root, ctx = {}) {
     const inboxRow = row("Kotak masuk", { value: "…", onClick: () => { location.hash = "#/notifikasi"; } });
     unreadCount().then((n) => setValue(inboxRow, n > 0 ? `${n} belum dibaca` : "kosong")).catch(() => setValue(inboxRow, "—"));
     container.appendChild(inboxRow);
+
+    // Insight & Celengan (T11) — opt-in, dihitung di perangkat
+    container.appendChild(heading("Insight"));
+    container.appendChild(row("Insight & Celengan virtual", { value: "opt-in • di perangkat", onClick: () => { location.hash = "#/insight"; } }));
 
     // Tampilan
     container.appendChild(heading("Tampilan"));

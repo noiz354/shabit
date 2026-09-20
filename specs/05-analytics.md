@@ -21,6 +21,9 @@ Activation (first habit <3mnt, first manual tx), Engagement (habit_completed/har
 | `notification_opened/dismissed` | Tap/swipe | {category, deep_link} | HW-NTF |
 | `export_requested/deletion_requested` | Tombol confirm | {scope} | HW-SET |
 | `paywall_shown/dismissed` | Hanya bila premium disetujui | {variant} | HW-BIZ |
+| `insight_viewed` (amandemen T11, 19 Sep 2026) | Ringkasan insight tampil (opt-in ON) | {period, has_scatter, confidence} | HW-INS |
+| `goal_created/completed/withdrawn` (T11) | Celengan dibuat / target tercapai / tarik dikonfirmasi | {daily_bucket} / {days} / {reason} — **tanpa nominal** | HW-INS |
+| `celebration_shared/dismissed` (T11) | Share card / tutup sheet perayaan | {streak_day} / {streak_day, never_again} | HW-INS |
 
 Larangan: nama, email, no rekening mentah, deskripsi transaksi, judul habit, nilai health di properties. Gunakan hash id.
 

@@ -2,7 +2,7 @@
 // Token-only (class app.css), tanpa alert/confirm, tanpa dialog sistem tanpa primer, non-color cues (ikon + teks), 48dp target.
 
 import { shell, el, btn, skeleton, goBack, formatDateId } from "./views.jsx";
-import { showToast, confirmSheet, infoSheet } from "./ui.js";
+import { showToast, confirmSheet, infoSheet, switchRow } from "./ui.js";
 import { makeListSwipeable } from "./gestures.js";
 import { queryPermission, shouldShowPrimer } from "./permissions.js";
 import { showPermissionPrimer } from "./views-auth.jsx";
@@ -12,43 +12,7 @@ import { getNotifPrefs, setNotifPref, partitionInbox, markRead, archive, markAll
 const CATEGORY_ORDER = ["habit", "budget", "streak", "weekly", "promo", "system"];
 const CATEGORY_ICON = { habit: "✅", budget: "💸", streak: "🔥", weekly: "📊", promo: "📣", system: "🛡️" };
 
-function switchRow({ id, label, desc, checked, disabled = false, note, onChange }) {
-  const row = el("div", "consent-card notif-row");
-  const text = el("div", "consent-text");
-  const lab = el("label", "consent-title", label);
-  lab.htmlFor = id;
-  text.appendChild(lab);
-  if (desc) text.appendChild(el("div", "consent-desc", desc));
-  if (note) {
-    const n = el("div", "status-line mt-8", note);
-    text.appendChild(n);
-  }
-  const sw = el("button", "switch");
-  sw.type = "button";
-  sw.id = id;
-  sw.setAttribute("role", "switch");
-  sw.setAttribute("aria-checked", String(!!checked));
-  sw.setAttribute("aria-label", label);
-  if (disabled) {
-    sw.setAttribute("aria-disabled", "true");
-    sw.disabled = true;
-  }
-  const knob = el("span", "switch-knob");
-  knob.setAttribute("aria-hidden", "true");
-  sw.appendChild(knob);
-  sw.addEventListener("click", async () => {
-    if (disabled) return;
-    const next = sw.getAttribute("aria-checked") !== "true";
-    sw.setAttribute("aria-checked", String(next));
-    try {
-      await onChange(next);
-    } catch {
-      sw.setAttribute("aria-checked", String(!next));
-    }
-  });
-  row.append(text, sw);
-  return row;
-}
+// switchRow: komponen bersama di ui.js (struktur .switch auth.css: input[role=switch] + .track + .thumb)
 
 function timeLabel(hhmm) {
   return String(hhmm || "").replace(":", ".");

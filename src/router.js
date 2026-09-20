@@ -13,6 +13,8 @@ import Navigo from "navigo";
 import { Beranda, Habit, Uang, Pengaturan, NotFound } from "./views.jsx";
 // T12: Kotak Masuk lazy (chunk terpisah, di luar bundle awal)
 const Inbox = (root, ctx) => import("./views-notify.jsx").then((m) => m.Inbox(root, ctx)).catch((e) => console.warn("[router] inbox", e));
+// T11: Insight & Celengan lazy (spec 10 amandemen)
+const Insight = (root, ctx) => import("./views-insight.jsx").then((m) => m.Insight(root, ctx)).catch((e) => console.warn("[router] insight", e));
 import { Auth } from "./views-auth.jsx";
 import { authGate, touchSession } from "./auth.js";
 import { getRange, setRange } from "./storage/prefs.js";
@@ -30,12 +32,13 @@ const ROUTES = {
   "/pengaturan": Pengaturan,
   "/pengaturan/:sub": Pengaturan,
   "/notifikasi": Inbox, // T12 NotificationInbox (spec 02)
+  "/insight": Insight, // T11 Insight + VirtualSavingsGoal (spec 10)
 };
 
 const DEEP_LINK_MAP = {
   "habitwealth://habit/complete": "#/habit",
   "habitwealth://money/alert": "#/uang",
-  "habitwealth://saving/withdraw": "#/uang",
+  "habitwealth://saving/withdraw": "#/insight",
   "habitwealth://settings/notifications": "#/pengaturan/notifikasi",
   "habitwealth://referral": "#/beranda",
 };

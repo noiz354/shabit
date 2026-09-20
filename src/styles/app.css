@@ -455,3 +455,27 @@ body {
 .inbox-chip { font-size: 12px; padding: 2px 10px; min-height: 28px; }
 .notif-row .consent-desc { max-width: 60ch; }
 .segmented button[aria-selected="true"] { background: var(--primary); color: var(--on-primary); border-color: transparent; }
+
+/* ===== T11 Insight & Celengan (token-only; bar = <progress>, tanpa inline style) ===== */
+.insight-facts { margin: 8px 0 0; padding-left: 18px; font-size: 13px; color: var(--on-background-secondary); display: grid; gap: 6px; }
+.insight-text { font-size: 15px; line-height: 1.45; margin-top: 8px; }
+.insight-bars { display: grid; gap: 6px; margin-top: 10px; }
+.insight-bar-row { display: grid; grid-template-columns: 44px 1fr 1fr; gap: 8px; align-items: center; }
+.insight-bar-label { font-size: 11px; color: var(--on-background-tertiary); }
+.insight-bar { width: 100%; height: 10px; border: 0; border-radius: 5px; overflow: hidden; background: var(--surface-variant); appearance: none; -webkit-appearance: none; }
+.insight-bar::-webkit-progress-bar { background: var(--surface-variant); border-radius: 5px; }
+.insight-bar-habit { accent-color: var(--primary); }
+.insight-bar-habit::-webkit-progress-value { background: var(--primary); }
+.insight-bar-habit::-moz-progress-bar { background: var(--primary); }
+.insight-bar-expense { accent-color: var(--warning); }
+.insight-bar-expense::-webkit-progress-value { background: var(--warning); }
+.insight-bar-expense::-moz-progress-bar { background: var(--warning); }
+.goal-legal { margin: 4px 0 8px; }
+.goal-card .goal-total { font-size: 15px; font-weight: 600; margin-top: 8px; }
+.goal-progress { width: 100%; height: 8px; border: 0; border-radius: 4px; overflow: hidden; margin-top: 6px; background: var(--surface-variant); accent-color: var(--positive); appearance: none; -webkit-appearance: none; }
+.goal-progress::-webkit-progress-bar { background: var(--surface-variant); border-radius: 4px; }
+.goal-progress::-webkit-progress-value { background: var(--positive); }
+.goal-progress::-moz-progress-bar { background: var(--positive); }
+.goal-today:empty { display: none; }
+.goal-status { flex-shrink: 0; }
+.celebrate-goal { font-weight: 600; color: var(--on-background); }
