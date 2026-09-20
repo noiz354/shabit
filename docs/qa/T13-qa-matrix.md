@@ -3,11 +3,13 @@
 > Status per item: **PASS** (ada bukti otomatis/terukur), **PARTIAL** (bukti sebagian), **NOT TESTED** (belum ada bukti — bukan klaim lolos), **BLOCKED** (butuh prasyarat), **FAIL**.
 > Sesuai kill-criteria P00 §10: tidak ada klaim PASS tanpa bukti. Bukti = file test (`tests/*.test.js`, `npm test`), output build (`npm run build`), smoke browser (bila ada).
 > Lingkungan bukti sesi ini: sandbox Linux, Node 22, vitest + happy-dom + fake-indexeddb (**bukan perangkat fisik**). LCP/CLS di device = NOT TESTED.
+> Verifikasi independen owner (19 Sep 2026): checkout branch + `npm install` + `npm test` → 34/34 PASS (sebelum penambahan test sesi lanjutan). Kegagalan awal = `node_modules` basi → **selalu `npm ci` setelah checkout** (README).
+> Update lanjutan (sesi 2): **51/51 PASS** (`tests/{auth,auth-views,core,ui-views,data}.test.js`). Status NOT TESTED/BLOCKED **tidak diubah** tanpa bukti baru (syarat merge c).
 
 ## 0. Cara menjalankan bukti
 ```
 npm ci
-npm test            # vitest run → tests/{auth,auth-views,core}.test.js
+npm test            # vitest run → tests/{auth,auth-views,core,ui-views,data}.test.js (51 tes)
 npm run build       # ukuran bundle + precache
 npm run dev         # smoke manual: #/auth → carousel → hub → consent → passkey → first-habit → #/beranda?first=1
 ```
@@ -16,13 +18,13 @@ npm run dev         # smoke manual: #/auth → carousel → hub → consent → 
 | Req | Layar (spec 02) | Event (spec 05) | Modul | Bukti | Status |
 |---|---|---|---|---|---|
 | HW-PRD (first value <3mnt) | AuthSplash → AuthOnboarding → AuthHub → AuthConsent → PasskeyEnrollment → FirstHabit → HomeDashboard(first-use) | `signup_completed{method,day}`, `onboarding_completed{duration_s,skipped}` | `src/auth.js`, `src/views-auth.jsx`, `src/router.js` (authGate) | `tests/auth.test.js` (state machine, guard, events tanpa email), `tests/auth-views.test.js` (DOM: consent, Nanti Saja, hub states, first habit + completion) | **PASS** (unit/DOM); durasi <3mnt di manusia = NOT TESTED |
-| HW-HAB | HabitToday/Editor/Detail | `habit_completed{habit_id_hash,habit_type,time_of_day}` | `src/habit.js`, `src/views.jsx` | `tests/auth-views.test.js › AuthFirstHabit` (create + complete + entry IDB + flag first-habit) | **PARTIAL** (CRUD undo/detail belum ada test) |
-| HW-MNY | MoneyOverview/Feed/Add | `transaction_created{kind,category,has_note}` | `src/money.js` | `tests/core.test.js › Uang` (masking default `Rp••••••`, `Rp10.000`, re-auth 5 mnt, expiry) | **PASS** (masking/format); feed/filter = NOT TESTED |
-| HW-DAT (sync/recovery) | System states offline/stale/partial; crash-recovery notice di Splash | `sync_failed/recovered` | `src/storage/outbox.js`, `src/auth.js restoreSession` | `tests/auth.test.js › restoreSession` (pendingSync count) | **PARTIAL** (drain tanpa duplikat = NOT TESTED; R1.1 partner = BLOCKED) |
+| HW-HAB | HabitToday/Editor/Detail | `habit_completed{habit_id_hash,habit_type,time_of_day}` | `src/habit.js`, `src/views.jsx` | `tests/auth-views.test.js › AuthFirstHabit`; `tests/data.test.js › Habit` (complete/undo streak + entry + outbox POST/DELETE, update/delete, 3 template); `tests/ui-views.test.js › Habit` (template → kartu tanpa reload, toggle ✓/Batal) | **PASS** (unit/DOM); detail histori + hapus destruktif = ada UI, NOT TESTED |
+| HW-MNY | MoneyOverview/Feed/Add | `transaction_created{kind,category,has_note}` | `src/money.js` | `tests/core.test.js › Uang` (masking, `Rp10.000`, re-auth); `tests/data.test.js › Uang` (filter from/to/cat/q, sort, budget ok/warning/over 80/100%, get/delete, clearReAuth) | **PASS** (logika); tampilan feed/donut = NOT TESTED visual |
+| HW-DAT (sync/recovery) | System states offline/stale/partial; crash-recovery notice di Splash | `sync_failed/recovered` | `src/storage/outbox.js`, `src/auth.js restoreSession` | `tests/auth.test.js › restoreSession`; `tests/data.test.js › Outbox` (drain: 1 kirim per entri, retry pakai Idempotency-Key sama, 409 = replay sukses, failed → retry) | **PASS** (drain tanpa duplikat, unit); R1.1 partner/stale/partial = BLOCKED |
 | HW-NTF | PermissionPrimer (post first-habit), NotificationPreferences | `permission_granted/denied{scope}`, `notification_opened` | `src/permissions.js`, `src/notifications.js`, `showPermissionPrimer` | `tests/core.test.js › Permissions` ("Later" tidak memicu dialog sistem; denied cooldown 7 hari), `tests/auth-views.test.js › Permission primer` (Nanti/Izinkan/deny fallback copy) | **PASS** (logika); tampilan notifikasi OS = NOT TESTED |
-| HW-SET | SettingsHub › Akun/Data & Privasi (riwayat consent + cabut), Export/Delete | `export_requested`, `deletion_requested` | `src/settings.js`, `src/views.jsx`, `src/auth.js revokeConsent` | `tests/auth.test.js › consent` (riwayat berversi, revoke) | **PARTIAL** (export/delete flow = NOT TESTED) |
+| HW-SET | SettingsHub › Akun/Data & Privasi (riwayat consent + cabut), Export/Delete | `export_requested`, `deletion_requested` | `src/settings.js`, `src/views.jsx`, `src/ui.js`, `src/auth.js revokeConsent` | `tests/auth.test.js › consent`; `tests/data.test.js › Pengaturan` (export/delete/wipe → RE_AUTH_REQUIRED tanpa re-auth; export tercatat; delete pending + cancel); `tests/ui-views.test.js` (Hapus akun: confirmSheet destruktif → sheet verifikasi → permintaan tercatat; Batal = tidak ada permintaan) | **PASS** (logika + DOM); OPFS nyata = NOT TESTED (happy-dom) |
 | Spec 17 range | Picker global + hash state | `range_changed` | `src/range.js`, `src/router.js` | `tests/core.test.js › Router`, `› Range presets` | **PASS** (parse/build/restore, preset from≤to) |
-| Spec 19 search | Search sheet 4 scope | `search_executed{char_len,result_count,scope}` | `src/search.js`, `src/storage/prefs.js` | `tests/core.test.js › Search history` (max-5, dedup), `› Analytics` (tanpa `q` mentah) | **PARTIAL** (ranking/highlight/offline badge = NOT TESTED) |
+| Spec 19 search | Search sheet 4 scope | `search_executed{char_len,result_count,scope}` | `src/search.js`, `src/workers/search-indexer.js`, `src/storage/prefs.js` | `tests/core.test.js › Search history`, `› Analytics`; `tests/data.test.js › Search` (ranking exact>prefix>substring — **bug diperbaiki**: akumulasi n-gram membuat "kopitiam" > "kopi"; grouping 4 scope; <2 char → history) | **PASS** (ranking/grouping main-thread); worker path + highlight + offline badge = NOT TESTED |
 | Spec 18 API | `/api/v1/*` | — | `public_html/api/v1/*.php` | `php -l` tidak tersedia di sandbox ini | **NOT TESTED** (sesi ini); smoke sebelumnya di PROGRESS (health OK) |
 | Spec 05 privasi analytics | — | semua | `src/analytics.js`, `src/crypto.js` | `tests/core.test.js › Analytics` (allowlist, redaksi email/amount/title/note), `› Crypto` (redactForLog, 1000 key unik, SHA-256) | **PASS** |
 | Wave 3 gate (WebAuthn) | PasskeyEnrollment | — | `src/webauthn.js` | `tests/core.test.js › WebAuthn` (tanpa RP → `RP_NOT_CONFIGURED`, `credentials.create` tidak dipanggil) | **PASS** (gate) / fitur = BLOCKED (ADR + endpoint RP) |
@@ -41,9 +43,9 @@ npm run dev         # smoke manual: #/auth → carousel → hub → consent → 
 | A11y | role=switch + aria-checked/label, live region status, focus ke h1 tiap langkah, target ≥48dp (CSS), alternatif keyboard carousel (panah), `aria-disabled` untuk fitur belum tersedia | struktur DOM diuji sebagian (`role="switch"`, `role="alert"`, `[role=dialog]`) | PARTIAL (SR/kontras/200% di device = NOT TESTED) |
 | Lokalisasi | `Rp10.000`, `Rp••••••`, copy Indonesia | `core.test.js › Uang` | PASS |
 | Privasi | Tanpa email di event; `q` mentah tidak masuk event; redaksi log | `auth.test.js`, `core.test.js › Analytics/Crypto` | PASS |
-| Security | Re-auth untuk saldo penuh; "Later" tak memicu dialog sistem; passkey tidak difake; tidak ada kredensial mentah tersimpan (hanya hash email untuk deteksi duplikat lokal) | `core.test.js › Permissions/WebAuthn/Uang` | PASS (logika); CSP/headers di server = NOT TESTED sesi ini |
-| Perf | Bundle awal: main JS 167.62 kB / gzip **53.64 kB** (<200 kB), CSS 17.62 kB / gzip 4.07 kB; ECharts lazy | `npm run build` 19 Sep 2026 | PASS (budget bundle); **LCP/CLS device = NOT TESTED** |
-| Recovery | Splash crash-recovery notice bila outbox pending + "Sync Sekarang"; biometrik 3× → AuthRecovery | `auth.test.js › restoreSession`, `› biometrik 3×`; `auth-views.test.js › AuthRecovery` | PASS (logika); drain tanpa duplikat = NOT TESTED |
+| Security | Re-auth untuk saldo penuh + export/delete/wipe; "Later" tak memicu dialog sistem; passkey tidak difake; aksi destruktif lewat confirmSheet (fokus default di Batal) | `core.test.js › Permissions/WebAuthn/Uang`, `data.test.js › Pengaturan`, `ui-views.test.js` | PASS (logika); CSP/headers di server = NOT TESTED sesi ini |
+| Perf | Bundle awal: main JS 172.75 kB / gzip **56.59 kB** (<200 kB), CSS 23.75 kB / gzip 5.21 kB; ECharts lazy | `npm run build` 19 Sep 2026 (sesi 2) | PASS (budget bundle); **LCP/CLS device = NOT TESTED** |
+| Recovery | Splash crash-recovery notice bila outbox pending + "Sync Sekarang"; biometrik 3× → AuthRecovery; drain retry pakai key sama | `auth.test.js`, `auth-views.test.js › AuthRecovery`, `data.test.js › Outbox` | PASS (logika) |
 | Motion | deeper=slide-up (`nav-deeper-enter`), back=slide-down, sheet dari bawah, reduced-motion fade | CSS token-only (`src/styles/auth.css`, `assets/css/motion.css`) | NOT TESTED (visual) |
 
 ## 3. Kill-criteria check (P00 §10)
@@ -76,8 +78,8 @@ npm run dev         # smoke manual: #/auth → carousel → hub → consent → 
 
 **Verdict sesi ini: NO-GO untuk rilis** (wajar — belum ada bukti device/LCP/a11y/legal), **GO untuk lanjut Wave 3 gated + T10–T12** setelah keputusan ADR (lihat `docs/mobile-api-audit/07-wave3-gates.md`).
 
-## 5. Gap yang diketahui (jujur)
-- `views.jsx` (Wave 2) masih memakai inline style + beberapa warna hardcode (`#0381FE`, `#999`) — melanggar aturan "tanpa hardcode warna" AGENTS.md; T5 baru memakai token murni. Perlu refactor bertahap (bukan blocker fungsional).
-- `alert()/confirm()` masih dipakai di Pengaturan (Wave 2) — ganti ke sheet One UI di iterasi berikutnya.
-- Belum ada test untuk: undo habit, feed/filter transaksi, export/delete, drain outbox tanpa duplikat, search ranking/highlight, SW offline.
-- Tidak ada perangkat fisik/CDP di sandbox ini → semua klaim visual/perf ditandai NOT TESTED.
+## 5. Gap yang diketahui (jujur) — diperbarui sesi 2
+- ~~`views.jsx` inline style + hex~~ **LUNAS**: `views.jsx` ditulis ulang token-only (class di `app.css`), `alert/confirm` → `src/ui.js` (toast/confirmSheet/infoSheet/chooseSheet), reload hanya setelah wipe data. Dijaga test statik `tests/ui-views.test.js` (tanpa hex/alert/confirm/inline style). `charts.js` membaca warna dari token CSS (`tokenColor`), `share.js` memakai toast bersama.
+- Sisa hex di luar tokens.css: `charts.js` `TOKEN_FALLBACK` (fallback bila computed style kosong), `range.js`/`search.js`/`pwa.js`/`print.js`/`theme.js` (Wave 1–2, belum direfactor — bukan views; dijadwalkan).
+- Belum ada test untuk: highlight `<mark>` + worker path search, SW offline/precache, PWA install sheet, range picker sheet, habit detail/hapus, transaksi detail/hapus.
+- Tidak ada perangkat fisik/CDP di sandbox ini → semua klaim visual/perf ditandai NOT TESTED. Chromium tidak dapat diunduh (CDN ECONNRESET) — dicoba 2×.

@@ -12,7 +12,7 @@ import { getPrefs } from "./storage/prefs.js";
 const STORE = "transactions";
 const BUDGET_STORE = "budgets";
 
-function formatRupiah(amount) {
+export function formatRupiah(amount) {
   // amount integer minor (rupiah, tanpa desimal)
   try {
     return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(amount).replace("IDR", "Rp").replace(/\s/g, "");
@@ -21,11 +21,11 @@ function formatRupiah(amount) {
   }
 }
 
-function maskRupiah() {
+export function maskRupiah() {
   return "Rp••••••";
 }
 
-function maskAccount(account) {
+export function maskAccount(account) {
   // BCA •••• 4821
   if (!account) return "••••";
   const last4 = account.slice(-4);
@@ -45,6 +45,14 @@ export async function requestReAuth() {
   reAuthSession = { expiresAt: Date.now() + 5 * 60 * 1000 };
   try {
     localStorage.setItem("hw:re-auth:expires", String(reAuthSession.expiresAt));
+  } catch {}
+  return true;
+}
+
+export function clearReAuth() {
+  reAuthSession = null;
+  try {
+    localStorage.removeItem("hw:re-auth:expires");
   } catch {}
   return true;
 }
@@ -117,6 +125,14 @@ export async function createTransaction(data) {
   return tx;
 }
 
+export async function getTransaction(id) {
+  try {
+    return await idbGet(STORE, id);
+  } catch {
+    return null;
+  }
+}
+
 export async function updateTransaction(id, patch) {
   const existing = await idbGet(STORE, id);
   if (!existing) throw new Error("Transaksi tidak ditemukan");
@@ -185,9 +201,11 @@ export const moneyHelpers = {
   maskAccount,
   isReAuthed,
   requestReAuth,
+  clearReAuth,
   checkReAuthFromStorage,
   getDisplayAmount,
   listTransactions,
+  getTransaction,
   createTransaction,
   updateTransaction,
   deleteTransaction,

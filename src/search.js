@@ -90,26 +90,44 @@ function buildIndexMainThread(docs) {
   return { tokens: tokenMap, docs: docMap };
 }
 
-function searchMainThread(q, index) {
-  if (!q || q.trim().length < MIN_CHARS) return [];
-  const lowerQ = q.toLowerCase().replace(/\./g, "");
-  const queryTokens = lowerQ.split(/[\s,;]+/).filter(Boolean);
-  const scores = {};
-
+// Kualitas kecocokan per token query (spec 19: exact > prefix > substring), dihitung dari teks dokumen —
+// bukan dari akumulasi n-gram (yang membuat "kopitiam" mengalahkan "kopi").
+function docText(doc) {
+  return [doc.title, doc.note, doc.category, doc.amount ? String(doc.amount).replace(/\./g, "") : "", doc.source, doc.merchant]
+    .filter(Boolean).join(" ").toLowerCase().replace(/\./g, "");
+}
+function matchQuality(doc, qt) {
+  const text = docText(doc);
+  if (!text) return 0;
+  const words = text.split(/[\s,;]+/).filter(Boolean);
+  if (words.includes(qt)) return 3;
+  if (words.some((w) => w.startsWith(qt))) return 2;
+  if (text.includes(qt)) return 1;
+  return 0;
+}
+function scoreCandidates(queryTokens, index) {
+  const { tokens, docs } = index;
+  const candidates = new Set();
   for (const qt of queryTokens) {
-    for (const [token, ids] of Object.entries(index.tokens)) {
-      if (token.includes(qt) || qt.includes(token)) {
-        for (const id of ids) {
-          scores[id] = (scores[id] || 0) + (token === qt ? 3 : token.startsWith(qt) ? 2 : 1);
-        }
-      }
+    for (const [token, ids] of Object.entries(tokens)) {
+      if (token === qt || token.startsWith(qt) || token.includes(qt)) ids.forEach((id) => candidates.add(id));
     }
   }
+  const results = [];
+  for (const id of candidates) {
+    const doc = docs[id];
+    if (!doc) continue;
+    let score = 0;
+    for (const qt of queryTokens) score += matchQuality(doc, qt);
+    if (score > 0) results.push({ id, score, doc, updatedAt: doc.updatedAt || 0 });
+  }
+  return results.sort((a, b) => b.score - a.score || b.updatedAt - a.updatedAt);
+}
 
-  return Object.entries(scores)
-    .map(([id, score]) => ({ id, score, doc: index.docs[id], updatedAt: index.docs[id]?.updatedAt || 0 }))
-    .sort((a, b) => b.score - a.score || b.updatedAt - a.updatedAt)
-    .slice(0, MAX_RESULTS);
+function searchMainThread(q, index) {
+  if (!q || q.trim().length < MIN_CHARS) return [];
+  const queryTokens = q.toLowerCase().replace(/\./g, "").split(/[\s,;]+/).filter(Boolean);
+  return scoreCandidates(queryTokens, index).slice(0, MAX_RESULTS);
 }
 
 export async function searchGlobal(q) {

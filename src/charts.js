@@ -8,6 +8,17 @@ import { getAdaptiveTier } from "./net.js";
 import { getRange } from "./storage/prefs.js";
 import { onOrientationChange, makeChartFullscreenable } from "./orientation.js";
 
+// Warna dari token CSS (canvas/SVG butuh nilai riil; sumber tetap tokens.css, bukan hex di fitur)
+const TOKEN_FALLBACK = { "--primary": "#0381FE", "--surface-variant": "#EEEEEE", "--surface-elevated": "#FFFFFF", "--positive": "#0AA64E", "--negative": "#D93B30", "--on-background": "#000000" };
+export function tokenColor(name) {
+  try {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    if (v) return v;
+  } catch {}
+  return TOKEN_FALLBACK[name] || "";
+}
+
+
 let echartsCore = null;
 
 async function loadECharts() {
@@ -31,7 +42,7 @@ async function loadECharts() {
 
 // Ring progress SVG hand-rolled (murah, no ECharts)
 export function renderRingProgress(container, percent, options = {}) {
-  const { size = 120, stroke = 10, color = "#0381FE", bg = "#EEEEEE" } = options;
+  const { size = 120, stroke = 10, color = tokenColor("--primary"), bg = tokenColor("--surface-variant") } = options;
   const radius = (size - stroke) / 2;
   const circ = 2 * Math.PI * radius;
   const offset = circ - (percent / 100) * circ;
@@ -55,7 +66,7 @@ export function renderStreakDots(container, streakDays, max = 30) {
   const dots = [];
   for (let i = 0; i < max; i++) {
     const filled = i < streakDays;
-    dots.push(`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${filled ? "#0381FE" : "#EEEEEE"};margin:2px" aria-hidden="true"></span>`);
+    dots.push(`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${filled ? tokenColor("--primary") : tokenColor("--surface-variant")};margin:2px" aria-hidden="true"></span>`);
   }
   container.innerHTML = `
     <div role="img" aria-label="Streak ${streakDays} hari dari ${max}">
@@ -92,11 +103,11 @@ export async function renderHabitBar(container, data, options = {}) {
   const chart = echarts.init(container, null, { renderer: "canvas" });
 
   const option = {
-    tooltip: { trigger: "axis", backgroundColor: "#FFFFFF", borderRadius: 16, textStyle: { fontSize: 14 } },
+    tooltip: { trigger: "axis", backgroundColor: tokenColor("--surface-elevated"), borderRadius: 16, textStyle: { fontSize: 14 } },
     grid: { left: 16, right: 16, top: 16, bottom: 24, containLabel: true },
     xAxis: { type: "category", data: data.map((d) => d.date), axisLabel: { fontSize: 10 } },
     yAxis: { type: "value", min: 0 },
-    series: [{ type: "bar", data: data.map((d) => d.done), itemStyle: { color: "#0381FE", borderRadius: [8,8,0,0] }, animation: !options.reduceMotion }],
+    series: [{ type: "bar", data: data.map((d) => d.done), itemStyle: { color: tokenColor("--primary"), borderRadius: [8,8,0,0] }, animation: !options.reduceMotion }],
   };
 
   chart.setOption(option);
@@ -149,7 +160,7 @@ export async function renderDonutCategory(container, data, options = {}) {
   const chart = echarts.init(container, null, { renderer: "canvas" });
 
   const option = {
-    tooltip: { trigger: "item", backgroundColor: "#FFFFFF", borderRadius: 16 },
+    tooltip: { trigger: "item", backgroundColor: tokenColor("--surface-elevated"), borderRadius: 16 },
     legend: { bottom: 0, type: "scroll", textStyle: { fontSize: 12 } },
     series: [
       {
@@ -159,7 +170,7 @@ export async function renderDonutCategory(container, data, options = {}) {
         itemStyle: { borderRadius: 8, borderColor: "#fff", borderWidth: 2 },
         label: { show: false },
         emphasis: { label: { show: true, fontSize: 14, fontWeight: "bold" } },
-        data: data.map((d) => ({ name: d.key, value: d.total, itemStyle: { color: d.color || "#0381FE" } })),
+        data: data.map((d) => ({ name: d.key, value: d.total, itemStyle: { color: d.color || tokenColor("--primary") } })),
         animation: !options.reduceMotion,
       },
     ],
@@ -212,8 +223,8 @@ export async function renderCashflowBar(container, data, options = {}) {
     xAxis: { type: "category", data: data.map((d) => d.month) },
     yAxis: { type: "value" },
     series: [
-      { name: "Masuk", type: "bar", data: data.map((d) => d.in), itemStyle: { color: "#0AA64E" } },
-      { name: "Keluar", type: "bar", data: data.map((d) => d.out), itemStyle: { color: "#D93B30" } },
+      { name: "Masuk", type: "bar", data: data.map((d) => d.in), itemStyle: { color: tokenColor("--positive") } },
+      { name: "Keluar", type: "bar", data: data.map((d) => d.out), itemStyle: { color: tokenColor("--negative") } },
     ],
   };
 
@@ -261,7 +272,7 @@ export async function renderScatterIfNeeded(container, data, options = {}) {
     tooltip: { trigger: "item" },
     xAxis: { name: "Streak", type: "value" },
     yAxis: { name: "Impulsif", type: "value" },
-    series: [{ type: "scatter", data: data.map((d) => [d.streak, d.impulsive]), symbolSize: 12, itemStyle: { color: "#0381FE" } }],
+    series: [{ type: "scatter", data: data.map((d) => [d.streak, d.impulsive]), symbolSize: 12, itemStyle: { color: tokenColor("--primary") } }],
   };
 
   chart.setOption(option);

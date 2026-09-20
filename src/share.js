@@ -5,6 +5,8 @@
  * - navigator.share with clipboard fallback + toast
  */
 
+import { showToast } from "./ui.js"; // toast bersama, token-only
+
 export function isWebShareSupported() {
   return !!(navigator.share);
 }
@@ -91,21 +93,6 @@ export async function copyToClipboard(text) {
   } catch {
     return false;
   }
-}
-
-function showToast(message) {
-  let toast = document.getElementById("hw-toast");
-  if (!toast) {
-    toast = document.createElement("div");
-    toast.id = "hw-toast";
-    toast.className = "toast";
-    toast.setAttribute("role", "status");
-    toast.setAttribute("aria-live", "polite");
-    document.body.appendChild(toast);
-  }
-  toast.textContent = message;
-  toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 3000);
 }
 
 export async function copySummaryText(text) {

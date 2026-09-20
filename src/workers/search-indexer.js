@@ -77,38 +77,44 @@ function buildIndex(docs) {
   return { tokens: tokenMap, docs: docMap };
 }
 
-function search(q, index) {
-  if (!q || q.trim().length < 2) return [];
-  const queryTokens = tokenize(q);
-  if (!queryTokens.length) return [];
 
+// Kualitas kecocokan per token query (spec 19: exact > prefix > substring), dihitung dari teks dokumen —
+// bukan dari akumulasi n-gram (yang membuat "kopitiam" mengalahkan "kopi").
+function docText(doc) {
+  return [doc.title, doc.note, doc.category, doc.amount ? String(doc.amount).replace(/\./g, "") : "", doc.source, doc.merchant]
+    .filter(Boolean).join(" ").toLowerCase().replace(/\./g, "");
+}
+function matchQuality(doc, qt) {
+  const text = docText(doc);
+  if (!text) return 0;
+  const words = text.split(/[\s,;]+/).filter(Boolean);
+  if (words.includes(qt)) return 3;
+  if (words.some((w) => w.startsWith(qt))) return 2;
+  if (text.includes(qt)) return 1;
+  return 0;
+}
+function scoreCandidates(queryTokens, index) {
   const { tokens, docs } = index;
-  const scores = {}; // id -> score
-
+  const candidates = new Set();
   for (const qt of queryTokens) {
-    const matchedIds = tokens[qt] || [];
-    for (const id of matchedIds) {
-      if (!scores[id]) scores[id] = 0;
-      // exact match > prefix > substring scoring
-      // Since we have ngrams, exact will have higher weight if token equals full field token
-      // Simplified: if qt length >= 3, higher score
-      if (qt.length >= 4) scores[id] += 3;
-      else if (qt.length >= 2) scores[id] += 2;
-      else scores[id] += 1;
+    for (const [token, ids] of Object.entries(tokens)) {
+      if (token === qt || token.startsWith(qt) || token.includes(qt)) ids.forEach((id) => candidates.add(id));
     }
   }
+  const results = [];
+  for (const id of candidates) {
+    const doc = docs[id];
+    if (!doc) continue;
+    let score = 0;
+    for (const qt of queryTokens) score += matchQuality(doc, qt);
+    if (score > 0) results.push({ id, score, doc, updatedAt: doc.updatedAt || 0 });
+  }
+  return results.sort((a, b) => b.score - a.score || b.updatedAt - a.updatedAt);
+}
 
-  // Convert to results sorted by score desc + terbaru dulu bila skor seri
-  const results = Object.entries(scores)
-    .map(([id, score]) => {
-      const doc = docs[id];
-      return { id, score, doc, updatedAt: doc.updatedAt || 0 };
-    })
-    .sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      return b.updatedAt - a.updatedAt;
-    })
-    .slice(0, 50);
-
-  return results;
+function search(q, index) {
+  if (!q || q.trim().length < 2) return [];
+  const queryTokens = String(q).toLowerCase().replace(/\./g, "").replace(/rp/g, "").trim().split(/[\s,;]+/).filter(Boolean);
+  if (!queryTokens.length) return [];
+  return scoreCandidates(queryTokens, index).slice(0, 50);
 }

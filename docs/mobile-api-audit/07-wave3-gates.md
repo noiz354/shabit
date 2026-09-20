@@ -38,9 +38,14 @@
 
 Tidak bisa dijalankan di sandbox (tanpa perangkat/IdP) → status BLOCKED, bukan NOT DONE.
 
-## 4. Keputusan yang diminta dari owner (Ask first)
-1. **Identity ADR**: RP ID/domain produksi + apakah passkey boleh ditambahkan sebagai R1.1 dengan `attestation:"none"` dan recovery via email-link?
-2. **Endpoint PHP baru**: setuju 4 endpoint `/auth/passkey/*` + 2 tabel di atas?
-3. **Push sender**: implementasi manual (tanpa vendor) vs vendor lib di-FTP; cron cPanel tersedia?
-4. **Email**: ada SMTP/transaksional untuk tautan masuk/recovery? (mempengaruhi AuthHub + Recovery)
-5. **Perangkat uji**: siapa yang memegang device untuk RES-01/03/04 + smoke LCP/CLS?
+## 4. Keputusan owner (19 Sep 2026) + status
+| # | Pertanyaan | Keputusan | Tindak lanjut |
+|---|---|---|---|
+| 1 | Identity ADR | **SETUJU bersyarat**: RP ID = domain produksi; `attestation:"none"`; recovery email-link (syarat SMTP); ADR + amandemen spec 07/18 dulu; **tanpa kode sebelum opsi verifikasi diputuskan** | `docs/adr/ADR-0001-identity-passkey.md` (PROPOSED — **§5 opsi A hand-roll + test vector vs B vendor `lbuchs/WebAuthn` menunggu keputusan**), spec 07 + 18 diamandemen |
+| 2 | Endpoint PHP baru | **DISETUJUI prinsip** dengan syarat: amandemen spec 18 (kontrak + error codes), migrasi SQL terpisah, challenge `random_bytes` TTL ≤5 mnt, log redacted, envelope + `X-Request-Id` | spec 18 §Passkey (6 endpoint + 4 error code), `db/migrations/002_webauthn.sql`. Kode endpoint **belum** ditulis (menunggu #1 §5) |
+| 3 | Push sender | **Vendor lib via FTP** (web-push-php), pin versi utk PHP 8.5, konfirmasi ekstensi via phpinfo; **cron cPanel = OPEN (owner)** — tanpa cron tetap push lokal | `docs/adr/ADR-0002-push-sender.md` (ACCEPTED; v11.x PHP ≥8.2; gmp/bcmath opsional performa) |
+| 4 | SMTP + perangkat | **Butuh manusia**: kredensial SMTP; 1 Android + 1 iPhone; jawaban cron | BLOCKED sampai tersedia — Wave 3 penuh terkunci; lanjut T13/T10–T12 |
+
+### Masih terbuka (jawaban owner)
+- ADR-0001 §5: **A** (hand-roll + test vector resmi) atau **B** (vendor `lbuchs/WebAuthn`, direkomendasikan)?
+- Cron cPanel tersedia? SMTP tersedia? Perangkat uji?

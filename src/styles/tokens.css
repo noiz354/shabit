@@ -21,6 +21,9 @@
   --informative: #0072DE;
   --notification-badge: #FF2D2D;
   --divider: #E0E0E0;
+  --toast-bg: #323232;      /* spec 11: toast/snackbar pill */
+  --toast-fg: #FFFFFF;
+  --shadow-sheet: 0 -2px 16px rgba(0, 0, 0, 0.12);
   --space-8: 8px;
   --space-16: 16px;
   --space-24: 24px;
@@ -50,5 +53,8 @@
     --informative: #5BA6FF;
     --notification-badge: #FF4D4D;
     --divider: #333333;
+    --toast-bg: #E5E5E5;
+    --toast-fg: #111111;
+    --shadow-sheet: 0 -2px 16px rgba(0, 0, 0, 0.6);
   }
 }

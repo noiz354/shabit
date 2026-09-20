@@ -5,6 +5,7 @@ CSR One UI untuk PHP 40-shared. Manual-first. Tanpa money movement. Indonesia co
 
 ## Commands
 ```
+Setup: npm ci             # WAJIB setelah clone/checkout (lockfile; node_modules tidak di-commit — basi = test gagal palsu)
 Build: npm run build      # vite build -> dist/ -> FTP public_html/
 Dev: npm run dev
 Test: npm test            # vitest run (happy-dom + fake-indexeddb; fetch di-stub gagal = tanpa backend)
@@ -37,7 +38,7 @@ One UI: Primary `#0381FE`, 24dp margin, radius 18 btn/16 card/26 dialog/24 pill,
 ## Boundaries
 - Always: spec dulu (Addy Osmani SPECIFY→PLAN→TASKS→IMPLEMENT, gated); skill routing per `docs/agent-skills-map.md` (`frontend-ui-engineering` untuk UI, `source-driven-development` untuk verifikasi docs, `verification-before-completion` sebelum klaim DONE); update TODO+PROGRESS tiap tugas; reduced-motion; re-auth aksi sensitif; non-color cues.
 - Ask first: skema DB final, endpoint PHP baru, klaim provider/legal/vendor, premium/paywall.
-- Never: transfer/custody/auto-debit; klaim Plaid/Nordigen/E2EE/pasal UU/retensi final; SSR/Node di shared host; PII di analytics/log; hardcode warna/durasi di fitur; fade global; `isLoading` saja.
+- Never: transfer/custody/auto-debit; klaim Plaid/Nordigen/E2EE/pasal UU/retensi final; SSR/Node di shared host; PII di analytics/log; hardcode warna/durasi di fitur; fade global; `isLoading` saja; `alert()/confirm()/prompt()` (pakai `src/ui.js` sheet/toast); inline style visual di views (class + token).
 
 ## Success
 First habit <3mnt; LCP<2.5s/CLS<0.1 diukur; Gate A–E + kill-criteria lolos dengan evidence.
