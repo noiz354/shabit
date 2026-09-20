@@ -26,8 +26,11 @@ const DEFAULT_PREFS = {
   tz: "Asia/Jakarta",
   notifications: {
     enabled: true,
-    quietHours: { start: "22:00", end: "07:00" },
-    categories: { habit: true, budget: true, insight: true, system: true },
+    quietHours: { start: "22:00", end: "07:00" }, // tz-user (prefs.tz), bukan server
+    // T12: habit=pengingat, budget=peringatan, streak=perayaan, weekly=ringkasan, promo=marketing (default OFF, terpisah), system=selalu ON
+    categories: { habit: true, budget: true, streak: true, weekly: true, promo: false, system: true },
+    channels: { push: true, inApp: true, email: false }, // email: belum tersedia (SMTP BLOCKED)
+    stats: { date: null, delivered: 0 }, // cap diukur, belum dibatasi (OPEN spec 11)
   },
   privacy: {
     analyticsOptIn: false,

@@ -28,6 +28,8 @@ assets/css/           → tokens.css, motion.css
 assets/js/            → router/habit/money/settings/range/charts (CSR, transform/opacity only)
 src/auth.js + src/views-auth.jsx → T5 sesi lokal-first + onboarding state machine + authGate (spec 07)
 tests/ + docs/qa/     → T13 vitest + QA matrix/traceability/Go-No-Go (status jujur PASS/NOT TESTED/BLOCKED)
+src/ui.js             → toast/sheet/confirm One UI (pengganti alert/confirm); src/notify.js + src/views-notify.jsx → T12 Kotak Masuk + Quiet Hours tz-user
+docs/adr/ + db/migrations/ → keputusan arsitektur (ADR-0001 passkey PROPOSED, ADR-0002 push ACCEPTED) + migrasi SQL terpisah
 public_html/api/v1/*.php → thin JSON, PDO prepared, redacted logs
 reference/oneui/ → suplemen, jangan edit; kanonis tetap DESIGN.md lokal
 ```

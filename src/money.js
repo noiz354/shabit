@@ -114,6 +114,17 @@ export async function createTransaction(data) {
     updatedAt: Date.now(),
   };
 
+  // T12: ambang budget 80/100 — hitung pct sebelum & sesudah (sekali per kategori/bulan, dedup di notify)
+  const month = tx.date.slice(0, 7);
+  let pctBefore = null;
+  if (tx.kind === "expense") {
+    try {
+      const st = await getBudgetStatus(month);
+      const b = st.find((x) => x.category === tx.category);
+      if (b) pctBefore = b.pct;
+    } catch {}
+  }
+
   await idbPut(STORE, tx);
 
   try {
@@ -121,6 +132,17 @@ export async function createTransaction(data) {
   } catch {}
 
   track("transaction_created", { kind: tx.kind, category: tx.category, has_note: !!tx.note }).catch(() => {});
+
+  if (pctBefore !== null) {
+    try {
+      const st = await getBudgetStatus(month);
+      const a = st.find((x) => x.category === tx.category);
+      if (a) {
+        const { checkBudgetThresholds } = await import("./notify.js");
+        await checkBudgetThresholds(tx.category, month, { before: pctBefore, after: a.pct });
+      }
+    } catch {}
+  }
 
   return tx;
 }

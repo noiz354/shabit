@@ -11,6 +11,8 @@
 
 import Navigo from "navigo";
 import { Beranda, Habit, Uang, Pengaturan, NotFound } from "./views.jsx";
+// T12: Kotak Masuk lazy (chunk terpisah, di luar bundle awal)
+const Inbox = (root, ctx) => import("./views-notify.jsx").then((m) => m.Inbox(root, ctx)).catch((e) => console.warn("[router] inbox", e));
 import { Auth } from "./views-auth.jsx";
 import { authGate, touchSession } from "./auth.js";
 import { getRange, setRange } from "./storage/prefs.js";
@@ -27,6 +29,7 @@ const ROUTES = {
   "/uang/:id": Uang,
   "/pengaturan": Pengaturan,
   "/pengaturan/:sub": Pengaturan,
+  "/notifikasi": Inbox, // T12 NotificationInbox (spec 02)
 };
 
 const DEEP_LINK_MAP = {

@@ -30,6 +30,7 @@ import { api } from "./api.js";
 import { getSession, maskEmail, logout, hasPasskeyReminder, dismissPasskeyReminder, getConsentHistory, revokeConsent, getPasskeyState } from "./auth.js";
 import { getPasskeyCapability, PASSKEY_REASON_COPY } from "./webauthn.js";
 import { showToast, openSheet, confirmSheet, infoSheet, chooseSheet } from "./ui.js";
+const unreadCount = () => import("./notify.js").then((m) => m.unreadCount()); // T12 lazy
 
 const TABS = [
   ["#/beranda", "Beranda"],
@@ -38,14 +39,14 @@ const TABS = [
   ["#/pengaturan", "Pengaturan"]
 ];
 
-// ---------- helpers ----------
-function el(tag, className, text) {
+// ---------- helpers (diekspor untuk views-notify.jsx) ----------
+export function el(tag, className, text) {
   const n = document.createElement(tag);
   if (className) n.className = className;
   if (text !== undefined && text !== null) n.textContent = text;
   return n;
 }
-function btn(label, className = "btn btn-secondary", onClick) {
+export function btn(label, className = "btn btn-secondary", onClick) {
   const b = el("button", className, label);
   b.type = "button";
   if (onClick) b.addEventListener("click", onClick);
@@ -81,23 +82,23 @@ function selectField(id, label, options, value) {
   wrap.append(lab, sel);
   return { wrap, select: sel };
 }
-function todayStr() {
+export function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
-function formatDateId(iso) {
+export function formatDateId(iso) {
   try {
     return new Date(`${iso}T00:00:00`).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
   } catch {
     return iso;
   }
 }
-function skeleton(kind = "card") {
+export function skeleton(kind = "card") {
   const s = el("div", `skeleton skeleton-${kind}`);
   s.setAttribute("aria-busy", "true");
   s.setAttribute("aria-label", "Memuat…");
   return s;
 }
-function goBack(root, fallbackHash) {
+export function goBack(root, fallbackHash) {
   const page = root.querySelector(".page");
   if (page && !prefersReducedMotion()) {
     page.classList.add("nav-back-exit");
@@ -128,7 +129,7 @@ function bottomNav(currentHash) {
 }
 
 function appBar(title, options = {}) {
-  const { collapsible = true, rangeLabel = "", showSearch = false, showRange = false } = options;
+  const { collapsible = true, rangeLabel = "", showSearch = false, showRange = false, showInbox = false } = options;
   const header = document.createElement("header");
   header.className = "appbar viewing-area";
   header.dataset.state = "expanded";
@@ -138,8 +139,22 @@ function appBar(title, options = {}) {
 
   if (rangeLabel) header.appendChild(el("p", "appbar-sub", rangeLabel));
 
-  if (showSearch || showRange) {
+  if (showSearch || showRange || showInbox) {
     const actions = el("div", "appbar-actions");
+    if (showInbox) {
+      // T12: lonceng Kotak Masuk + jumlah belum dibaca (non-color cue: angka)
+      const bell = btn("", "btn btn-secondary btn-small inbox-bell", () => { location.hash = "#/notifikasi"; });
+      const setCount = (n) => {
+        bell.textContent = n > 0 ? `🔔 ${n}` : "🔔";
+        bell.setAttribute("aria-label", n > 0 ? `Kotak masuk, ${n} belum dibaca` : "Kotak masuk");
+      };
+      setCount(0);
+      unreadCount().then(setCount).catch(() => {});
+      const onChange = (e) => setCount(e.detail && typeof e.detail.unread === "number" ? e.detail.unread : 0);
+      window.addEventListener("hw:inbox-changed", onChange);
+      header._cleanupInbox = () => window.removeEventListener("hw:inbox-changed", onChange);
+      actions.appendChild(bell);
+    }
     if (showSearch) {
       const searchBtn = btn("🔍 Cari", "btn btn-secondary btn-small", () => showSearchSheet());
       searchBtn.dataset.searchTrigger = "1";
@@ -179,17 +194,22 @@ function appBar(title, options = {}) {
       header._snapTimeout = setTimeout(() => controller.settle(delta > 0 ? -500 : 500), 150);
     }
     window.addEventListener("scroll", onScroll, { passive: true });
-    header._cleanup = () => window.removeEventListener("scroll", onScroll);
+    header._cleanup = () => {
+      window.removeEventListener("scroll", onScroll);
+      header._cleanupInbox && header._cleanupInbox();
+    };
+  } else if (header._cleanupInbox) {
+    header._cleanup = () => header._cleanupInbox();
   }
   return header;
 }
 
-function shell(root, title, bodyBuilder, options = {}) {
-  const { showRange = false, showSearch = false, collapsible = true } = options;
+export function shell(root, title, bodyBuilder, options = {}) {
+  const { showRange = false, showSearch = false, collapsible = true, showInbox = false } = options;
   const wrap = el("div", "page");
   const range = getRange();
   const rangeLabel = showRange ? `${formatRangeLabel(range)} • ${range.tz}` : "";
-  const header = appBar(title, { collapsible, rangeLabel, showSearch, showRange });
+  const header = appBar(title, { collapsible, rangeLabel, showSearch, showRange, showInbox });
   const main = el("div", "interaction-area");
 
   if (typeof bodyBuilder === "function") {
@@ -444,7 +464,7 @@ export function Beranda(root, ctx = {}) {
       btn("Cetak", "btn btn-secondary btn-small", () => printReport()),
     );
     container.appendChild(actions);
-  }, { showRange: true, showSearch: true, collapsible: true });
+  }, { showRange: true, showSearch: true, showInbox: true, collapsible: true });
 }
 
 // ---------- Habit ----------
@@ -710,7 +730,12 @@ export function Uang(root, ctx = {}) {
 }
 
 // ---------- Pengaturan ----------
-export function Pengaturan(root) {
+export function Pengaturan(root, ctx = {}) {
+  if (ctx.params && ctx.params.sub === "notifikasi") {
+    // T12: NotificationPreferences (lazy agar views.jsx tidak membengkak)
+    import("./views-notify.jsx").then((m) => m.NotifPrefs(root, ctx)).catch((e) => console.warn("[views] notif prefs", e));
+    return;
+  }
   const rerender = () => {
     root.querySelectorAll(".page").forEach((p) => {
       try { p._cleanup && p._cleanup(); } catch {}
@@ -778,6 +803,13 @@ export function Pengaturan(root) {
         location.hash = "#/auth";
       },
     }));
+
+    // Notifikasi (T12)
+    container.appendChild(heading("Notifikasi"));
+    container.appendChild(row("Preferensi notifikasi", { value: "kategori • jam tenang", onClick: () => { location.hash = "#/pengaturan/notifikasi"; } }));
+    const inboxRow = row("Kotak masuk", { value: "…", onClick: () => { location.hash = "#/notifikasi"; } });
+    unreadCount().then((n) => setValue(inboxRow, n > 0 ? `${n} belum dibaca` : "kosong")).catch(() => setValue(inboxRow, "—"));
+    container.appendChild(inboxRow);
 
     // Tampilan
     container.appendChild(heading("Tampilan"));

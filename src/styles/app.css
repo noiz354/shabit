@@ -445,3 +445,13 @@ body {
 
 /* Print: sembunyikan toast/sheet */
 @media print { .toast, .pwa-sheet, .scrim { display: none !important; } }
+
+/* ===== T12 Notifikasi: Kotak Masuk + preferensi ===== */
+.inbox-bell { min-width: 48px; }
+.inbox-list { display: flex; flex-direction: column; gap: 8px; }
+.inbox-item { position: relative; touch-action: pan-y; }
+.inbox-item.unread { border-left: 4px solid var(--primary); } /* + badge-dot + teks "belum dibaca" (non-color cue) */
+.inbox-item .card-title { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+.inbox-chip { font-size: 12px; padding: 2px 10px; min-height: 28px; }
+.notif-row .consent-desc { max-width: 60ch; }
+.segmented button[aria-selected="true"] { background: var(--primary); color: var(--on-primary); border-color: transparent; }

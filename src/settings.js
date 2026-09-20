@@ -126,7 +126,7 @@ export async function wipeAllData() {
 
   try {
     const db = await getDB();
-    const stores = ["habits", "habit_entries", "transactions", "budgets", "savings_goals", "search_index", "kv", "outbox", "export_meta", "opfs_fallback", "analytics_queue"];
+    const stores = ["habits", "habit_entries", "transactions", "budgets", "savings_goals", "search_index", "kv", "outbox", "export_meta", "opfs_fallback", "analytics_queue", "inbox"];
     for (const store of stores) {
       try {
         if (db.objectStoreNames.contains(store)) {

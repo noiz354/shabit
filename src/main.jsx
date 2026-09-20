@@ -105,6 +105,8 @@ async function bootstrap() {
   // 10. Router (hash + param restore + URLPattern + back restores range/search)
   try {
     initRouter(root);
+    // T12: Kotak Masuk + evaluasi pengingat (foreground/visibility/timer) — tidak memblokir render, tidak memicu dialog sistem
+    import("./notify.js").then((m) => m.initNotify()).catch((e) => console.warn("[main] notify init failed", e));
   } catch (e) {
     console.error("[main] router init failed", e);
     root.innerHTML = "<div class='page'><header class='viewing-area'><h1>HabitWealth</h1></header><div class='interaction-area'><p class='placeholder'>Gagal memuat router.</p></div></div>";
@@ -118,6 +120,7 @@ async function bootstrap() {
     window.HWTheme = { initTheme };
     window.HWAuth = auth; // T5: state auth/onboarding untuk QA (resetAuthState, getNextStep, dst.)
     window.HWWebAuthn = webauthn; // Wave 3 gated: kapabilitas passkey
+    window.HWNotify = { load: () => import("./notify.js") }; // T12 (lazy)
     window.HWPerf = { getMetrics: () => import("./perf.js").then((m) => m.getPerfMetrics()) };
   } catch {}
 }
