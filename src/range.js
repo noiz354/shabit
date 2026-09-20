@@ -25,10 +25,27 @@ export function formatRangeLabel(range) {
     } catch { return "Bulan ini"; }
   }
   if (range.from && range.to) {
-    if (range.from === range.to) return range.from;
-    return `${range.from} – ${range.to}`;
+    // Spec 17: `19–30 Sep 2026` (bulan sama) / `25 Agu – 5 Sep 2026` (tahun sama) / `28 Des 2025 – 3 Jan 2026`
+    try {
+      const a = new Date(`${range.from}T00:00:00`);
+      const b = new Date(`${range.to}T00:00:00`);
+      const dm = (d) => d.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+      const dmy = (d) => d.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+      if (range.from === range.to) return dmy(a);
+      if (a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth()) return `${a.getDate()}–${dmy(b)}`;
+      if (a.getFullYear() === b.getFullYear()) return `${dm(a)} – ${dmy(b)}`;
+      return `${dmy(a)} – ${dmy(b)}`;
+    } catch {
+      return `${range.from} – ${range.to}`;
+    }
   }
   return range.preset || "";
+}
+
+/** Jumlah hari inklusif dalam range (untuk event `days`), null bila tidak lengkap. */
+export function rangeDays(range) {
+  if (!range || !range.from || !range.to) return null;
+  return dayCount(range.from, range.to);
 }
 
 function dayCount(from, to) {
@@ -195,6 +212,7 @@ export function initRangePickerButton(btnEl, onApply) {
 export const rangeHelpers = {
   PRESETS,
   formatRangeLabel,
+  rangeDays,
   showRangePicker,
   initRangePickerButton,
   validateCustomRange,

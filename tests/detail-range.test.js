@@ -177,3 +177,61 @@ describe("Detail habit & transaksi (spec 08/09) — hapus destruktif lewat confi
     expect(location.hash).toBe("#/uang");
   });
 });
+
+describe("Range empty state (spec 17 'Empty & stale') + range_empty_shown", () => {
+  it("Uang tanpa transaksi di rentang kustom → teks '1–10 Sep 2026' + CTA Catat/Geser rentang/Kembali ke Bulan ini + range_empty_shown{module:'uang',days:10}; preset month → tanpa CTA kembali; Geser rentang membuka sheet range", async () => {
+    const prefs = await import("../src/storage/prefs.js");
+    const { formatRangeLabel } = await import("../src/range.js");
+    const views = await import("../src/views.jsx");
+    prefs.setRange({ preset: "custom", from: "2026-09-01", to: "2026-09-10", tz: "Asia/Jakarta" });
+    location.hash = "#/uang";
+    views.Uang(document.getElementById("app"), {});
+    await tick(60);
+    const empty = document.querySelector(".range-empty");
+    expect(empty).toBeTruthy();
+    expect(empty.getAttribute("role")).toBe("status");
+    expect(empty.querySelector("p").textContent).toBe("Tidak ada transaksi 1–10 Sep 2026.");
+    expect(formatRangeLabel({ preset: "custom", from: "2026-09-01", to: "2026-09-10" })).toBe("1–10 Sep 2026");
+    expect([...empty.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["Catat", "Geser rentang", "Kembali ke Bulan ini"]);
+    expect(tracked.filter((t) => t.name === "range_empty_shown")).toEqual([{ name: "range_empty_shown", props: { module: "uang", days: 10 } }]);
+
+    [...empty.querySelectorAll("button")].find((b) => b.textContent === "Geser rentang").click();
+    await tick(20);
+    const sheet = document.getElementById("range-picker-sheet");
+    expect(sheet).toBeTruthy();
+    expect(sheet.querySelector("#range-from").value).toBe("2026-09-01");
+    document.querySelector(".scrim").click();
+    await tick(400);
+
+    // preset bulan ini → CTA "Kembali ke Bulan ini" tidak relevan
+    document.body.innerHTML = '<div id="app"></div>';
+    tracked.length = 0;
+    prefs.setRange({ preset: "month", from: "2026-09-01", to: "2026-09-30", tz: "Asia/Jakarta" });
+    views.Uang(document.getElementById("app"), {});
+    await tick(60);
+    const empty2 = document.querySelector(".range-empty");
+    expect(empty2.querySelector("p").textContent).toBe("Tidak ada transaksi September 2026.");
+    expect([...empty2.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["Catat", "Geser rentang"]);
+    expect(tracked.filter((t) => t.name === "range_empty_shown")).toEqual([{ name: "range_empty_shown", props: { module: "uang", days: 30 } }]);
+  });
+
+  it("Beranda tanpa pengeluaran di rentang → donut empty dengan label rentang + range_empty_shown{module:'beranda'}; ada transaksi → tidak ada event", async () => {
+    const prefs = await import("../src/storage/prefs.js");
+    const views = await import("../src/views.jsx");
+    prefs.setRange({ preset: "7d", from: "2026-09-13", to: "2026-09-19", tz: "Asia/Jakarta" });
+    location.hash = "#/beranda";
+    views.Beranda(document.getElementById("app"), {});
+    await tick(80);
+    const donutEmpty = [...document.querySelectorAll(".empty-state")].find((e) => /Belum ada pengeluaran/.test(e.textContent));
+    expect(donutEmpty.textContent).toBe("Belum ada pengeluaran 13–19 Sep 2026.");
+    expect(tracked.filter((t) => t.name === "range_empty_shown")).toEqual([{ name: "range_empty_shown", props: { module: "beranda", days: 7 } }]);
+
+    document.body.innerHTML = '<div id="app"></div>';
+    tracked.length = 0;
+    const money = await import("../src/money.js");
+    await money.createTransaction({ kind: "expense", amount: 15000, category: "Makan", date: "2026-09-15", account_ref: "Tunai" });
+    views.Beranda(document.getElementById("app"), {});
+    await tick(80);
+    expect(tracked.find((t) => t.name === "range_empty_shown")).toBeUndefined();
+  });
+});
