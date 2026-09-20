@@ -18,7 +18,7 @@ import { listHabits, getHabit, createHabit, deleteHabit, completeHabit, undoComp
 import { listTransactions, getTransaction, createTransaction, deleteTransaction, getDisplayAmount, requestReAuth, clearReAuth, isReAuthed, checkReAuthFromStorage, getBudgetStatus } from "./money.js";
 import { getSettings, updateSetting, requestExport, requestDeleteAccount, getFAQ } from "./settings.js";
 import { renderRingProgress, renderStreakDots, renderHabitBar, renderDonutCategory } from "./charts.js";
-import { showRangePicker, formatRangeLabel } from "./range.js";
+import { showRangePicker, formatRangeLabel, rangeDays } from "./range.js";
 import { createSearchUI } from "./search.js";
 import { track } from "./analytics.js";
 import { feedbackHabitComplete } from "./feedback.js";
@@ -446,7 +446,8 @@ export function Beranda(root, ctx = {}) {
       if (catData.length) {
         renderDonutCategory(donutContainer, catData, { reduceMotion: prefersReducedMotion() }).catch(() => {});
       } else {
-        donutContainer.appendChild(el("p", "empty-state", "Belum ada pengeluaran di rentang ini."));
+        donutContainer.appendChild(el("p", "empty-state", `Belum ada pengeluaran ${formatRangeLabel(range)}.`));
+        track("range_empty_shown", { module: "beranda", days: rangeDays(range) }).catch(() => {});
       }
       const summary = await api.get(`/dashboard/summary?from=${range.from || ""}&to=${range.to || ""}&tz=${range.tz}`).catch(() => null);
       if (summary && summary.ok && summary.data) {
@@ -711,10 +712,19 @@ export function Uang(root, ctx = {}) {
       const txs = await listTransactions({ from: range.from, to: range.to, cat: ctx.query && ctx.query.cat ? ctx.query.cat : undefined }).catch(() => []);
       feed.innerHTML = "";
       if (!txs.length) {
-        const empty = el("div", "empty-state");
-        empty.appendChild(el("p", "", `Tidak ada transaksi ${range.from ? `${formatDateId(range.from)} – ${formatDateId(range.to)}` : ""}.`));
-        empty.appendChild(btn("Kembali ke Bulan ini", "btn btn-flat btn-small", () => { location.hash = "#/uang?preset=month"; }));
+        // Spec 17 "Empty & stale": teks + CTA Catat / Geser rentang / Kembali ke Bulan ini + event range_empty_shown{module,days}
+        const empty = el("div", "empty-state range-empty");
+        empty.setAttribute("role", "status");
+        empty.appendChild(el("p", "", `Tidak ada transaksi ${formatRangeLabel(range)}.`));
+        const ctas = el("div", "btn-row wrap");
+        ctas.append(
+          btn("Catat", "btn btn-primary btn-small", () => showAddTransactionSheet(() => loadMoney())),
+          btn("Geser rentang", "btn btn-secondary btn-small", () => showRangePicker(range, (nr) => window.dispatchEvent(new CustomEvent("hw:range-changed", { detail: nr })))),
+        );
+        if (range.preset !== "month") ctas.appendChild(btn("Kembali ke Bulan ini", "btn btn-flat btn-small", () => { location.hash = "#/uang?preset=month"; }));
+        empty.appendChild(ctas);
         feed.appendChild(empty);
+        track("range_empty_shown", { module: "uang", days: rangeDays(range) }).catch(() => {});
       } else {
         txs.slice(0, 20).forEach((tx) => {
           const item = el("button", "tx-item");

@@ -150,6 +150,13 @@
 - **Verifikasi**: `npm test` **101/101** (11 file; +guardrails UI_MODULES 11, +pwa banner/update 1); `vite build` main **180.29 kB / gzip 59.17 kB**. Test primer/hub/first-habit lama (auth-views) tetap hijau setelah konversi DOM. NOT TESTED: tampilan nyata di browser (tanpa Chromium).
 - **Status PR #2**: dari sisi build semua syarat reviewer (a)(b)+seragam terpenuhi; menunggu merge. 4 item owner tetap terbuka (ADR-0001 §5 A/B, cron, SMTP, perangkat).
 
+## 20 Sep 2026 — PR #2 merge, sinkronisasi, T13 ditutup, `range_empty_shown` (spec 17)
+- **Merge**: reviewer menyetujui `ed74796` → PR #2 di-merge dengan merge commit `e04be87` (2 parent, sama seperti PR #1). `main` lokal/remote dan branch sesi `arena/01a0bae6-shabit` disinkronkan ke `e04be87` (fast-forward), working tree bersih.
+- **T13 ditutup** (`TODO.md` `[x]`): deliverable lengkap; item yang butuh browser/perangkat → **T13-DEVICE (BLOCKED)** agar tidak hilang dan statusnya di QA §5 tetap NOT TESTED (tidak diubah jadi PASS tanpa bukti).
+- **`range_empty_shown`** (event spec 17 yang belum pernah dipicu, ditemukan audit `track()` sesi 3): Uang feed kosong kini sesuai kontrak "Empty & stale" — teks `Tidak ada transaksi 1–10 Sep 2026.` (`role=status`) + CTA **Catat** (sheet catat), **Geser rentang** (range sheet, `hw:range-changed`), **Kembali ke Bulan ini** (hanya bila preset ≠ month) + `range_empty_shown{module:"uang",days}`; Beranda donut kosong → label rentang + `range_empty_shown{module:"beranda",days}`; tidak ada event bila ada data. `formatRangeLabel` ditingkatkan ke format spec (`1–30 Sep 2026` / `25 Agu – 5 Sep 2026` / `28 Des 2025 – 3 Jan 2026` / `19 Sep 2026` / `September 2026`) menggantikan ISO mentah `2026-09-01 – 2026-09-30` di app bar/empty state; `rangeDays` diekspor (+`rangeHelpers`).
+- **Verifikasi**: `npm test` **104/104** (11 file; detail-range +2); `vite build` main **181.16 kB / gzip 59.42 kB**; guardrail (allowlist, track-literal, UI_MODULES) hijau — tidak ada allowlist/PHP yang berubah (event sudah terdaftar sejak Wave 2).
+- **Next**: T10 hanya bila partner terverifikasi (belum). Tanpa keputusan owner, kandidat aman tersisa kecil: `print.js`/`theme.js` hex (bukan view, non-guardrail). Wave 3 code tetap gated 4 item owner (ADR-0001 §5 A/B, cron, SMTP, perangkat) — tidak berubah.
+
 ## Log format going forward
 `## <date> — <phase>`: Done / Blocked / Decisions / Next. Update tiap selesai 1 tugas TODO.
 

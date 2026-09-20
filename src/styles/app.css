@@ -535,3 +535,6 @@ body {
 /* Chart fullscreen button (orientation.js) — posisi via class, bukan inline style */
 .chart-has-fs { position: relative; }
 .chart-fs-btn { position: absolute; top: 8px; right: 8px; }
+
+/* Range empty state (spec 17 "Empty & stale") */
+.range-empty .btn-row { justify-content: center; margin-top: 8px; }
